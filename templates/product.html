@@ -1,0 +1,39 @@
+{{template "layout" .}}
+
+{{define "title"}}{{.Product.Name}} - MinhaLoja{{end}}
+
+{{define "content"}}
+<div class="max-w-5xl mx-auto px-4 py-10">
+  <a href="/" class="text-forest-600 text-sm hover:underline font-medium">← Voltar para a loja</a>
+
+  <div class="mt-6 bg-white rounded-2xl shadow p-6 md:p-8 grid md:grid-cols-2 gap-8 border border-stone-100 items-start">
+    <div class="bg-stone-100 rounded-xl overflow-hidden">
+      <img src="{{.Product.ImageURL}}" alt="{{.Product.Name}}"
+           class="w-full h-auto block"
+           onerror="this.src='/static/img/placeholder.svg'"/>
+    </div>
+
+    <div class="flex flex-col justify-start">
+      <span class="text-sm text-forest-600 font-semibold uppercase tracking-wide">{{.Product.Category}}</span>
+      <h1 class="text-3xl font-bold text-gray-900 mt-1">{{.Product.Name}}</h1>
+      <p class="text-3xl font-bold text-shell-600 mt-3">{{.Product.FormattedPrice}}</p>
+      <p class="text-gray-600 mt-4 leading-relaxed">{{.Product.Description}}</p>
+
+      {{if gt .Product.Stock 0}}
+        <p class="text-forest-600 text-sm mt-2 font-medium">✅ Em estoque ({{.Product.Stock}} unidades)</p>
+        <form action="/carrinho/add" method="post" class="mt-6 flex items-center gap-3">
+          <input type="hidden" name="id" value="{{.Product.ID}}"/>
+          <label class="text-sm font-medium text-gray-700">Qtd:</label>
+          <input type="number" name="qty" value="1" min="1" max="{{.Product.Stock}}"
+                 class="w-20 border border-gray-300 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          <button class="flex-1 bg-shell-500 text-white py-3 rounded-xl font-semibold hover:bg-shell-600 transition">
+            🛒 Adicionar ao Carrinho
+          </button>
+        </form>
+      {{else}}
+        <p class="text-red-500 text-sm mt-4 font-medium">❌ Produto fora de estoque</p>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}

@@ -1,0 +1,71 @@
+{{template "layout" .}}
+
+{{define "title"}}MinhaLoja - Produtos{{end}}
+
+{{define "content"}}
+<!-- Hero -->
+<section class="bg-gradient-to-br from-forest-800 via-forest-700 to-forest-600 text-white py-16">
+  <div class="max-w-6xl mx-auto px-4 text-center">
+    <h1 class="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Bem-vindo à MinhaLoja</h1>
+    <p class="text-lg text-forest-200 mb-8">Os melhores produtos com os melhores preços</p>
+    <form action="/" method="get" class="flex justify-center">
+      <input name="q" type="text" placeholder="O que você está procurando?" value="{{.Search}}"
+        class="w-72 md:w-96 px-5 py-3 rounded-l-full text-gray-800 focus:outline-none shadow-md"/>
+      <button class="bg-shell-500 hover:bg-shell-600 text-white font-semibold px-7 py-3 rounded-r-full transition shadow-md">
+        Buscar
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- Categorias -->
+<section class="max-w-6xl mx-auto px-4 pt-8">
+  <div class="flex flex-wrap gap-2">
+    {{range .Categories}}
+    <a href="/?categoria={{.}}"
+       class="px-4 py-1.5 rounded-full text-sm font-medium border transition
+              {{if eq . $.SelectedCat}}bg-forest-700 text-white border-forest-700{{else}}bg-white text-gray-600 border-gray-300 hover:border-forest-500 hover:text-forest-700{{end}}">
+      {{.}}
+    </a>
+    {{end}}
+  </div>
+</section>
+
+<!-- Grid de Produtos -->
+<section class="max-w-6xl mx-auto px-4 py-8">
+  {{if not .Products}}
+    <div class="text-center py-20 text-gray-400">
+      <p class="text-5xl mb-4">😕</p>
+      <p class="text-xl font-medium">Nenhum produto encontrado.</p>
+    </div>
+  {{else}}
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 items-start">
+    {{range .Products}}
+    <div class="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden group border border-stone-100">
+      <a href="/produto?id={{.ID}}">
+        <div class="bg-stone-100 overflow-hidden">
+          <img src="{{.ImageURL}}" alt="{{.Name}}"
+               class="w-full h-auto block group-hover:scale-105 transition duration-300"
+               onerror="this.src='/static/img/placeholder.svg'"/>
+        </div>
+      </a>
+      <div class="p-3">
+        <span class="text-xs text-forest-600 font-semibold uppercase tracking-wide">{{.Category}}</span>
+        <a href="/produto?id={{.ID}}">
+          <h3 class="font-semibold text-gray-800 mt-0.5 line-clamp-2 hover:text-shell-600 transition text-sm">{{.Name}}</h3>
+        </a>
+        <p class="text-lg font-bold text-shell-600 mt-1">{{.FormattedPrice}}</p>
+        <form action="/carrinho/add" method="post" class="mt-2">
+          <input type="hidden" name="id" value="{{.ID}}"/>
+          <input type="hidden" name="qty" value="1"/>
+          <button class="w-full bg-shell-500 hover:bg-shell-600 text-white py-2 rounded-xl text-sm font-semibold transition">
+            Adicionar ao Carrinho
+          </button>
+        </form>
+      </div>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}

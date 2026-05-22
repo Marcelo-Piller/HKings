@@ -1,0 +1,63 @@
+{{template "admin_layout" .}}
+
+{{define "admin_heading"}}Dashboard{{end}}
+
+{{define "admin_content"}}
+<!-- Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+  <div class="bg-white rounded-xl shadow p-5">
+    <p class="text-gray-500 text-sm">Total de Pedidos</p>
+    <p class="text-3xl font-bold text-gray-800 mt-1">{{.TotalOrders}}</p>
+  </div>
+  <div class="bg-white rounded-xl shadow p-5">
+    <p class="text-gray-500 text-sm">Receita Total</p>
+    <p class="text-3xl font-bold text-green-600 mt-1">R$ {{printf "%.2f" .TotalRevenue}}</p>
+  </div>
+  <div class="bg-white rounded-xl shadow p-5">
+    <p class="text-gray-500 text-sm">Produtos Cadastrados</p>
+    <p class="text-3xl font-bold text-gray-800 mt-1">{{.TotalProducts}}</p>
+  </div>
+</div>
+
+<!-- Últimos pedidos -->
+<div class="bg-white rounded-xl shadow">
+  <div class="px-5 py-4 border-b flex items-center justify-between">
+    <h2 class="font-semibold text-gray-700">Últimos Pedidos</h2>
+    <a href="/admin/pedidos" class="text-indigo-600 text-sm hover:underline">Ver todos</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+        <tr>
+          <th class="text-left px-5 py-3">#</th>
+          <th class="text-left px-5 py-3">Cliente</th>
+          <th class="text-left px-5 py-3">Total</th>
+          <th class="text-left px-5 py-3">Status</th>
+          <th class="text-left px-5 py-3">Data</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {{range .Orders}}
+        <tr class="hover:bg-gray-50">
+          <td class="px-5 py-3 font-medium">#{{.ID}}</td>
+          <td class="px-5 py-3">{{.CustomerName}}</td>
+          <td class="px-5 py-3 font-semibold">R$ {{printf "%.2f" .Total}}</td>
+          <td class="px-5 py-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium
+              {{if eq .Status "pendente"}}bg-yellow-100 text-yellow-700
+              {{else if eq .Status "pago"}}bg-green-100 text-green-700
+              {{else if eq .Status "enviado"}}bg-blue-100 text-blue-700
+              {{else}}bg-red-100 text-red-700{{end}}">
+              {{.Status}}
+            </span>
+          </td>
+          <td class="px-5 py-3 text-gray-500">{{.CreatedAt}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">Nenhum pedido ainda.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{end}}

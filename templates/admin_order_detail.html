@@ -1,0 +1,61 @@
+{{template "admin_layout" .}}
+
+{{define "admin_heading"}}Pedido #{{.Order.ID}}{{end}}
+
+{{define "admin_content"}}
+<div class="max-w-2xl">
+  <a href="/admin/pedidos" class="text-indigo-600 text-sm hover:underline">← Voltar</a>
+  <div class="bg-white rounded-xl shadow p-6 mt-4 space-y-5">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <p class="text-gray-500">Cliente</p>
+        <p class="font-medium">{{.Order.CustomerName}}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">E-mail</p>
+        <p class="font-medium">{{.Order.CustomerEmail}}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Telefone</p>
+        <p class="font-medium">{{.Order.CustomerPhone}}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Criado em</p>
+        <p class="font-medium">{{.Order.CreatedAt}}</p>
+      </div>
+      <div class="col-span-2">
+        <p class="text-gray-500">Endereço</p>
+        <p class="font-medium">{{.Order.Address}}</p>
+      </div>
+    </div>
+
+    <div class="border-t pt-4">
+      <h3 class="font-semibold text-gray-700 mb-3">Itens</h3>
+      <div class="space-y-2 text-sm">
+        {{range .Order.Items}}
+        <div class="flex justify-between">
+          <span>{{.ProductName}} × {{.Quantity}}</span>
+          <span class="font-medium">R$ {{printf "%.2f" .Price}}</span>
+        </div>
+        {{end}}
+      </div>
+      <div class="flex justify-between font-bold text-base mt-3 border-t pt-3">
+        <span>Total</span>
+        <span class="text-indigo-600">{{.Order.FormattedTotal}}</span>
+      </div>
+    </div>
+
+    <form action="/admin/pedidos/detalhe?id={{.Order.ID}}" method="post" class="border-t pt-4 flex items-center gap-3">
+      <label class="text-sm font-medium text-gray-700">Alterar Status:</label>
+      <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="pendente" {{if eq .Order.Status "pendente"}}selected{{end}}>Pendente</option>
+        <option value="pago" {{if eq .Order.Status "pago"}}selected{{end}}>Pago</option>
+        <option value="enviado" {{if eq .Order.Status "enviado"}}selected{{end}}>Enviado</option>
+        <option value="entregue" {{if eq .Order.Status "entregue"}}selected{{end}}>Entregue</option>
+        <option value="cancelado" {{if eq .Order.Status "cancelado"}}selected{{end}}>Cancelado</option>
+      </select>
+      <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Salvar</button>
+    </form>
+  </div>
+</div>
+{{end}}

@@ -1,0 +1,80 @@
+{{template "layout" .}}
+
+{{define "title"}}Carrinho - MinhaLoja{{end}}
+
+{{define "content"}}
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">🛒 Seu Carrinho</h1>
+
+  {{if not .Cart.Items}}
+    <div class="bg-white rounded-2xl shadow p-16 text-center text-gray-400 border border-stone-100">
+      <p class="text-6xl mb-4">🛒</p>
+      <p class="text-xl font-medium mb-4">Seu carrinho está vazio</p>
+      <a href="/" class="inline-block bg-shell-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-shell-600 transition">
+        Continuar Comprando
+      </a>
+    </div>
+  {{else}}
+    <div class="bg-white rounded-2xl shadow overflow-hidden border border-stone-100">
+      <table class="w-full">
+        <thead class="bg-forest-800 text-white">
+          <tr>
+            <th class="text-left px-6 py-3 text-sm font-semibold">Produto</th>
+            <th class="text-center px-4 py-3 text-sm font-semibold">Qtd</th>
+            <th class="text-right px-6 py-3 text-sm font-semibold">Subtotal</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          {{range .Cart.Items}}
+          <tr class="hover:bg-shell-50 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <img src="{{.Product.ImageURL}}" alt="{{.Product.Name}}"
+                     class="w-14 h-14 object-cover rounded-lg bg-stone-100"
+                     onerror="this.src='/static/img/placeholder.svg'"/>
+                <div>
+                  <p class="font-semibold text-gray-800">{{.Product.Name}}</p>
+                  <p class="text-sm text-gray-500">{{.Product.FormattedPrice}} cada</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-4">
+              <form action="/carrinho/update" method="post" class="flex justify-center">
+                <input type="hidden" name="id" value="{{.Product.ID}}"/>
+                <input type="number" name="qty" value="{{.Quantity}}" min="1"
+                       onchange="this.form.submit()"
+                       class="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+              </form>
+            </td>
+            <td class="px-6 py-4 text-right font-bold text-shell-600">
+              {{.FormattedSubtotal}}
+            </td>
+            <td class="px-4 py-4">
+              <form action="/carrinho/remove" method="post">
+                <input type="hidden" name="id" value="{{.Product.ID}}"/>
+                <button class="text-red-400 hover:text-red-600 transition text-lg font-bold" title="Remover">✕</button>
+              </form>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+
+      <div class="px-6 py-5 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
+        <a href="/" class="text-forest-600 text-sm hover:underline font-medium">← Continuar comprando</a>
+        <div class="text-right">
+          <p class="text-gray-500 text-sm">Total do pedido</p>
+          <p class="text-2xl font-bold text-shell-600">{{.Cart.FormattedTotal}}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 text-right">
+      <a href="/checkout" class="inline-block bg-shell-500 text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-shell-600 transition shadow-md">
+        Finalizar Compra →
+      </a>
+    </div>
+  {{end}}
+</div>
+{{end}}
