@@ -1,0 +1,206 @@
+{{/*
+  Campos de formato (físico ou e-book) dos formulários de livro do admin e do
+  vendedor. Os blocos marcados com data-so="fisico" ou data-so="digital" só
+  aparecem, e só são enviados, no formato escolhido (ver "script_formato").
+*/}}
+
+{{define "campo_autor"}}
+<div>
+  <label for="autor" class="block text-sm font-medium text-gray-700 mb-1">Autor(a)</label>
+  <input id="autor" name="autor" maxlength="120" value="{{if .Product}}{{.Product.Author}}{{end}}"
+         placeholder="Ex.: Machado de Assis"
+         class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+  <p class="text-xs text-gray-400 mt-1">Aparece na página do livro e na capa gerada, quando não há foto.</p>
+  {{if and .Direitos .Direitos.Approved (eq .Direitos.Kind "autor")}}
+  <p class="text-xs text-forest-700 mt-1" data-so="digital">Em e-book, use um dos seus nomes aprovados: {{range $i, $a := .Direitos.Authors}}{{if $i}}, {{end}}<strong>{{$a}}</strong>{{end}}.</p>
+  {{end}}
+</div>
+{{end}}
+
+{{define "campo_isbn"}}
+<div class="rounded-lg border border-forest-100 bg-forest-50/60 p-4">
+  <label for="isbn" class="block text-sm font-medium text-gray-700 mb-1">ISBN <span class="font-normal text-gray-500">(o número do código de barras)</span></label>
+  <div class="flex gap-2">
+    <input id="isbn" name="isbn" maxlength="20" inputmode="numeric" value="{{if .Product}}{{.Product.ISBN}}{{end}}" placeholder="978…"
+           class="flex-1 min-w-0 border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+    <button type="button" id="buscarIsbn" class="shrink-0 bg-forest-800 hover:bg-forest-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium">Buscar dados</button>
+  </div>
+  <p id="isbnAviso" class="text-xs text-gray-500 mt-1.5">Preenche título, autor, editora, idioma, sinopse e capa que estiverem em branco.</p>
+  <input type="hidden" name="capa_url" id="capaUrl"/>
+  <div id="capaIsbn" class="hidden mt-3 flex items-center gap-3">
+    <img alt="Capa encontrada" class="w-14 h-20 object-cover rounded border border-gray-200 bg-white" referrerpolicy="no-referrer"/>
+    <p class="text-xs text-gray-600">Capa encontrada pelo ISBN. Ela será usada se você não enviar uma foto.</p>
+  </div>
+</div>
+<script>
+(function () {
+  var botao = document.getElementById('buscarIsbn');
+  if (!botao) return;
+  var form = botao.closest('form');
+  var aviso = document.getElementById('isbnAviso');
+  var base = location.pathname.indexOf('/admin') === 0 ? '/admin' : '/vendedor';
+  function preencher(nome, valor) {
+    var campo = form.querySelector('[name="' + nome + '"]');
+    if (campo && !campo.value.trim() && valor) { campo.value = valor; return 1; }
+    return 0;
+  }
+  botao.addEventListener('click', function () {
+    var codigo = document.getElementById('isbn').value.trim();
+    if (!codigo) { aviso.textContent = 'Digite o ISBN.'; return; }
+    botao.disabled = true; botao.textContent = 'Buscando…';
+    fetch(base + '/isbn?codigo=' + encodeURIComponent(codigo), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.erro) { aviso.textContent = j.erro; return; }
+        var d = j.dados, n = 0;
+        document.getElementById('isbn').value = j.isbn;
+        n += preencher('nome', d.titulo) + preencher('autor', d.autor) + preencher('editora', d.editora) +
+             preencher('idioma', d.idioma) + preencher('descricao', d.descricao);
+        if (d.capa) {
+          document.getElementById('capaUrl').value = d.capa;
+          var box = document.getElementById('capaIsbn');
+          box.querySelector('img').src = d.capa;
+          box.classList.remove('hidden');
+          n++;
+        }
+        aviso.textContent = n ? 'Pronto: ' + n + ' campo(s) preenchido(s). Confira antes de salvar.' : 'Livro encontrado, mas os campos já estavam preenchidos.';
+      })
+      .catch(function () { aviso.textContent = 'Não foi possível consultar agora.'; })
+      .then(function () { botao.disabled = false; botao.textContent = 'Buscar dados'; });
+  });
+})();
+</script>
+{{end}}
+
+{{define "campos_ficha"}}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div>
+    <label for="editora" class="block text-sm font-medium text-gray-700 mb-1">Editora</label>
+    <input id="editora" name="editora" maxlength="120" value="{{if .Product}}{{.Product.Publisher}}{{end}}"
+           class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+  </div>
+  <div>
+    <label for="idioma" class="block text-sm font-medium text-gray-700 mb-1">Idioma</label>
+    <input id="idioma" name="idioma" maxlength="40" value="{{if .Product}}{{.Product.Language}}{{end}}" placeholder="Português"
+           class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+  </div>
+</div>
+{{end}}
+
+{{define "campo_formato"}}
+{{if and .Product .Product.ID}}
+<input type="hidden" name="formato" value="{{.Product.Format}}"/>
+<p class="text-sm text-gray-600">
+  Formato: <strong class="text-gray-800">{{.Product.FormatLabel}}</strong>
+  <span class="text-xs text-gray-400">· definido no cadastro, para não mudar o que já foi vendido</span>
+</p>
+{{else}}
+{{$digital := and .Product (eq .Product.Format "digital")}}
+<fieldset>
+  <legend class="block text-sm font-medium text-gray-700 mb-2">Formato *</legend>
+  <div class="grid grid-cols-2 gap-3">
+    <label class="flex items-center gap-2.5 border border-gray-300 rounded-lg px-4 py-3 cursor-pointer has-[:checked]:border-musgo-600 has-[:checked]:bg-musgo-50 transition">
+      <input type="radio" name="formato" value="fisico" {{if not $digital}}checked{{end}} class="accent-[#1F5C3C]"/>
+      <span><span class="block text-sm font-medium">Livro físico</span><span class="block text-xs text-gray-500">Enviado pelo correio</span></span>
+    </label>
+    {{if and .Direitos (not .Direitos.Approved)}}
+    <div class="flex items-center gap-2.5 border border-dashed border-gray-300 rounded-lg px-4 py-3 bg-gray-50 text-gray-500">
+      <input type="radio" disabled class="opacity-50"/>
+      <span><span class="block text-sm font-medium">E-book</span>
+        <span class="block text-xs">{{if .Direitos.Pending}}Seu pedido está em análise{{else}}Precisa de aprovação. <a href="/vendedor/ebooks" class="underline text-forest-700">Pedir agora</a>{{end}}</span></span>
+    </div>
+    {{else}}
+    <label class="flex items-center gap-2.5 border border-gray-300 rounded-lg px-4 py-3 cursor-pointer has-[:checked]:border-cafe-700 has-[:checked]:bg-papel-100 transition">
+      <input type="radio" name="formato" value="digital" {{if $digital}}checked{{end}} class="accent-[#4A3424]"/>
+      <span><span class="block text-sm font-medium">E-book</span><span class="block text-xs text-gray-500">PDF, EPUB ou quadrinho (CBR/CBZ), entregue por download</span></span>
+    </label>
+    {{end}}
+  </div>
+</fieldset>
+{{end}}
+{{end}}
+
+{{define "campos_pacote"}}
+{{$p := .Product}}
+<fieldset data-so="fisico">
+  <legend class="block text-sm font-medium text-gray-700 mb-1">Pacote para o frete</legend>
+  <p class="text-xs text-gray-500 mb-2">Peso e medidas do livro já embalado. Os valores sugeridos servem para um livro comum.</p>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <label class="text-xs text-gray-600">Peso (g)
+      <input type="number" name="peso" min="1" max="30000" value="{{if $p}}{{$p.PackageWeightG}}{{else}}400{{end}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"/></label>
+    <label class="text-xs text-gray-600">Altura (cm)
+      <input type="number" name="altura" min="1" max="100" value="{{if $p}}{{$p.PackageHeight}}{{else}}4{{end}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"/></label>
+    <label class="text-xs text-gray-600">Largura (cm)
+      <input type="number" name="largura" min="1" max="100" value="{{if $p}}{{$p.PackageWidth}}{{else}}16{{end}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"/></label>
+    <label class="text-xs text-gray-600">Comprimento (cm)
+      <input type="number" name="comprimento" min="1" max="100" value="{{if $p}}{{$p.PackageLength}}{{else}}23{{end}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"/></label>
+  </div>
+</fieldset>
+{{end}}
+
+{{define "campos_ebook"}}
+{{$temArquivo := and .Product .Product.EbookFile}}
+<div data-so="digital" class="rounded-lg border border-stone-200 bg-stone-50 p-4 space-y-3">
+  <div>
+    <label for="ebook" class="block text-sm font-medium text-gray-700 mb-1">Arquivo do e-book (PDF, EPUB, CBR ou CBZ) {{if not $temArquivo}}*{{end}}</label>
+    {{if $temArquivo}}
+    <p class="text-xs text-gray-600 mb-2">Arquivo atual: <strong>{{.Product.EbookTypeLabel}}</strong>{{with .Product.EbookSizeLabel}} · {{.}}{{end}}. Envie outro só se quiser substituí-lo.</p>
+    {{end}}
+    <input id="ebook" type="file" name="ebook" accept=".pdf,.epub,.cbr,.cbz,application/pdf,application/epub+zip" {{if not $temArquivo}}required{{end}}
+           class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-shell-50 file:text-shell-700 file:font-medium hover:file:bg-shell-100"/>
+    {{if and .Product .Product.ID}}<p class="text-xs mt-1"><a href="{{if .Seller}}/vendedor{{else}}/admin{{end}}/produtos/audio?id={{.Product.ID}}" class="text-forest-700 underline font-medium">{{if .Product.AudioTracks}}Audiobook: {{.Product.AudioTracks}} faixa(s) →{{else}}Vender também o audiobook deste livro →{{end}}</a></p>{{end}}
+    <p class="text-xs text-gray-500 mt-1">Até 60 MB. Quem compra baixa o arquivo em "Minha biblioteca". Se você enviar uma versão corrigida, os compradores passam a baixar a nova.</p>
+  </div>
+  <div>
+    <label for="amostra" class="block text-sm font-medium text-gray-700 mb-1">Páginas da amostra grátis</label>
+    <input id="amostra" type="text" name="amostra" value="{{with .Product}}{{.PreviewPages}}{{end}}" maxlength="60" placeholder="1-4"
+           class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+    <p class="text-xs text-gray-500 mt-1">
+      Páginas que qualquer visitante pode ler na página do livro, antes de comprar. Deixe em branco para mostrar as 4 primeiras,
+      ou escolha as que quiser, como <strong>1-3, 12</strong>.
+      {{with .Product}}{{if gt .EbookPages 0}}Este arquivo tem <strong>{{.EbookPages}} páginas</strong>{{if eq .EbookType "epub"}} (em EPUB, cada página tem cerca de 1.800 caracteres; em quadrinho, cada imagem é uma página){{end}}; a amostra pode ter até <strong>{{.PreviewMax}}</strong>.{{end}}{{else}}A amostra pode ter até um quarto do livro, no máximo 10 páginas.{{end}}
+    </p>
+  </div>
+  <label class="flex items-start gap-2.5 text-sm text-gray-700">
+    <input id="direitos" type="checkbox" name="direitos" {{if not $temArquivo}}required{{end}} class="mt-0.5 w-4 h-4 accent-[#1F5C3C]"/>
+    <span>
+      Declaro que sou o autor desta obra ou que tenho autorização do autor ou da editora para vendê-la em formato digital.
+      <span class="block text-xs text-gray-500 mt-0.5">Obras enviadas sem esses direitos são retiradas da loja e a conta pode ser suspensa. A declaração fica registrada a cada arquivo enviado.</span>
+    </span>
+  </label>
+</div>
+{{end}}
+
+{{define "script_formato"}}
+<script>
+(function () {
+  var form = document.currentScript.closest('form');
+  if (!form) return;
+  function formatoAtual() {
+    var fixo = form.querySelector('input[name="formato"][type="hidden"]');
+    if (fixo) return fixo.value;
+    var marcado = form.querySelector('input[name="formato"]:checked');
+    return marcado ? marcado.value : 'fisico';
+  }
+  // Campos escondidos ficam desabilitados: não são enviados nem bloqueiam o
+  // envio por "campo obrigatório" de um formato que não foi escolhido.
+  function aplicar() {
+    var atual = formatoAtual();
+    form.querySelectorAll('[data-so]').forEach(function (bloco) {
+      var mostrar = bloco.getAttribute('data-so') === atual;
+      bloco.style.display = mostrar ? '' : 'none';
+      bloco.querySelectorAll('input, select, textarea').forEach(function (campo) { campo.disabled = !mostrar; });
+    });
+  }
+  form.addEventListener('change', function (e) {
+    if (e.target.name === 'formato') aplicar();
+    // Arquivo novo exige nova declaração de direitos.
+    if (e.target.name === 'ebook') {
+      var direitos = form.querySelector('#direitos');
+      if (direitos) direitos.required = e.target.files.length > 0 || direitos.required;
+    }
+  });
+  aplicar();
+})();
+</script>
+{{end}}

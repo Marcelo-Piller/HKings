@@ -1,0 +1,77 @@
+{{template "layout" .}}
+
+{{define "title"}}Termos de Uso — Livredo{{end}}
+
+{{define "content"}}
+<article class="doc-legal max-w-3xl mx-auto px-4 pt-12 pb-6 text-cafe-800 leading-[1.8]">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Livredo</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Termos de Uso</h1>
+    <p class="text-sm text-cafe-500 mt-3">Versão de {{.VersaoLegivel}}</p>
+  </header>
+
+  <p class="mt-10">Estes termos regem o uso do site {{.Site}}, mantido por <strong>{{.Controlador}}</strong>{{with .Documento}} (nº {{.}}){{end}}. Ao criar uma conta ou fazer uma compra, você declara que leu e aceita estes Termos e a <a href="/privacidade">Política de Privacidade</a>.</p>
+
+  <h2>1. O que é o Livredo</h2>
+  <p>O Livredo é um marketplace de livros físicos e digitais. Leitores, sebos, livrarias, editoras e autores independentes anunciam e vendem os próprios livros; o Livredo também vende alguns títulos diretamente. Em cada livro aparece quem é o vendedor.</p>
+  <p>Quando a venda é feita por um vendedor, ele é o responsável pelo livro anunciado, pela descrição, pelo estado de conservação, pelo envio e pela nota fiscal, quando exigida. O Livredo oferece a plataforma, intermedeia o pagamento pelo Mercado Pago e atende reclamações.</p>
+
+  <h2>2. Cadastro</h2>
+  <ul>
+    <li>É preciso ter 18 anos ou mais, ou usar o site com um responsável legal.</li>
+    <li>Os dados informados precisam ser verdadeiros e atualizados. Você é responsável pela sua senha e pelo que é feito na sua conta.</li>
+    <li>Podemos suspender contas usadas para fraude, pirataria, abuso ou que descumpram estes Termos.</li>
+  </ul>
+
+  <h2>3. Compras</h2>
+  <ul>
+    <li>Preço, frete e prazo aparecem antes da finalização. O pagamento é processado pelo Mercado Pago (PIX ou cartão), e o pedido é confirmado quando o pagamento é aprovado.</li>
+    <li>O envio de livros físicos é feito pelo vendedor, com código de rastreio quando disponível.</li>
+    <li>E-books ficam em "Minha biblioteca" após a confirmação do pagamento, para uso pessoal. Não é permitido copiar, revender ou distribuir o arquivo.</li>
+    <li><strong>Direito de arrependimento:</strong> você pode desistir da compra em até 7 dias do recebimento (art. 49 do Código de Defesa do Consumidor), com reembolso integral. Em e-books, peça antes de baixar o arquivo.</li>
+    <li>Problemas com o pedido (atraso, livro diferente do anunciado, avaria) podem ser tratados com o vendedor e, se não resolvidos, com o Livredo, pela página do pedido ou pelos canais de atendimento.</li>
+  </ul>
+
+  <h2>4. Regras para vendedores</h2>
+  <ul>
+    <li>Anunciar só livros que você tem e pode vender, com fotos e descrição fiéis, inclusive do estado de conservação.</li>
+    <li><strong>E-books:</strong> só o próprio autor ou quem tem os direitos de distribuição digital (editoras e distribuidoras parceiras), depois da aprovação da loja. É proibido vender obra pirateada, digitalizada sem autorização ou de terceiros sem direitos. A violação leva à retirada dos livros e à suspensão da conta, sem prejuízo das medidas legais.</li>
+    <li>Enviar no prazo informado, embalar com cuidado e informar o rastreio.</li>
+    <li>Usar os dados dos compradores <strong>somente</strong> para entregar o pedido e atender o cliente, seguindo a LGPD. É proibido usá-los para marketing ou repassá-los.</li>
+    <li>O Livredo cobra uma comissão sobre o valor dos livros vendidos, informada no painel e retida automaticamente no pagamento. Os descontos de comissão por nível de reputação seguem as regras do painel.</li>
+    <li>Avaliações e denúncias dos compradores podem levar à revisão ou suspensão da conta.</li>
+  </ul>
+
+  <h2>5. Conteúdo e propriedade intelectual</h2>
+  <p>A marca, o visual e o código do Livredo pertencem ao {{.Controlador}}. Textos, fotos e arquivos enviados pelos vendedores continuam deles, que autorizam o Livredo a exibi-los no site para divulgar e vender os livros. Quem envia declara ter os direitos sobre esse conteúdo.</p>
+  <p>Se você acredita que um anúncio viola direitos autorais, use o botão "Denunciar vendedor" ou escreva {{if .EmailDPO}}para <a href="mailto:{{.EmailDPO}}">{{.EmailDPO}}</a>{{else}}pelos canais de atendimento{{end}}.</p>
+
+  <h2>6. Avaliações</h2>
+  <p>Avaliações devem ser honestas e sobre a compra. Removemos conteúdo ofensivo, discriminatório, falso ou que exponha dados pessoais.</p>
+
+  <h2>7. Responsabilidades</h2>
+  <p>O Livredo se esforça para manter o site disponível e seguro, mas pode haver interrupções para manutenção ou por falhas de terceiros. Nada nestes Termos limita os direitos do consumidor previstos no Código de Defesa do Consumidor.</p>
+
+  <h2>8. Dados pessoais</h2>
+  <p>O tratamento dos seus dados segue a <a href="/privacidade">Política de Privacidade</a> e a LGPD. Você pode baixar seus dados, corrigi-los e excluir sua conta em <a href="/conta/privacidade">Minha conta → Privacidade</a>.</p>
+
+  <h2>9. Mudanças</h2>
+  <p>Podemos atualizar estes Termos. Quando isso acontecer, a data da versão muda e você será convidado a ler e aceitar a nova versão no próximo acesso. Compras já feitas seguem a versão aceita na época.</p>
+
+  <h2>10. Lei e foro</h2>
+  <p>Valem as leis brasileiras. Fica eleito o foro do domicílio do consumidor.</p>
+
+  <p class="mt-10 text-sm text-cafe-500">Versão {{.Versao}}.</p>
+</article>
+{{template "doc_estilo"}}
+{{end}}
+
+{{define "doc_estilo"}}
+<style>
+  .doc-legal h2 { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; color: #0B2317; margin-top: 2.5rem; margin-bottom: .5rem; letter-spacing: -0.01em; }
+  .doc-legal p { margin-top: .9rem; }
+  .doc-legal ul { margin-top: .75rem; padding-left: 1.25rem; list-style: disc; }
+  .doc-legal li { margin-top: .4rem; }
+  .doc-legal a { color: #1A4A31; text-decoration: underline; text-underline-offset: 3px; }
+</style>
+{{end}}

@@ -2,46 +2,53 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{block "admin_title" .}}Admin{{end}} - Painel</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            shell:  { 50:'#fdf2f5',100:'#fce4ea',400:'#ec7592',500:'#e05575',600:'#c9405e',700:'#a8304a' },
-            forest: { 200:'#a9d2bc',300:'#74b498',600:'#24624f',700:'#1c4d3d',800:'#163829',900:'#0f2519' }
-          }
-        }
-      }
-    }
-  </script>
+  {{template "brand_head" .}}
+  <title>{{block "admin_title" .}}Admin{{end}} — Livredo</title>
 </head>
-<body class="bg-stone-100 min-h-screen">
+<body class="bg-papel-100 font-sans text-cafe-800 min-h-screen antialiased">
 
 <div class="flex min-h-screen">
   <!-- Sidebar -->
   <aside class="w-56 bg-forest-900 text-forest-200 flex flex-col">
-    <div class="p-5 text-white font-bold text-lg border-b border-forest-700">🛍️ Admin</div>
-    <nav class="flex-1 p-3 space-y-1 text-sm">
-      <a href="/admin" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-forest-700 hover:text-white transition">📊 Dashboard</a>
-      <a href="/admin/produtos" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-forest-700 hover:text-white transition">📦 Produtos</a>
-      <a href="/admin/pedidos" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-forest-700 hover:text-white transition">🛒 Pedidos</a>
-      <a href="/" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-forest-700 hover:text-white transition" target="_blank">🌐 Ver Loja</a>
+    <div class="p-5 border-b border-forest-700 flex items-center gap-3">
+      <span class="w-10 h-10 rounded-xl bg-papel-50/10 text-papel-50 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "marca"}}</span>
+      <div>
+        <p class="font-serif text-lg text-white leading-none whitespace-nowrap">Livre<em class="italic text-musgo-300">do</em></p>
+        <p class="text-[10.5px] tracking-[.2em] uppercase text-caramelo-400 mt-1.5">Administração</p>
+      </div>
+    </div>
+    <nav class="flex-1 p-3 space-y-0.5 text-sm">
+      <p class="painel-secao">Acervo</p>
+      <a href="/admin" class="painel-link {{if eq .Path "/admin"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "estante"}}</span>Visão geral</a>
+      <a href="/admin/produtos" class="painel-link {{if comeca .Path "/admin/produtos"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "livros"}}</span>Livros</a>
+      <a href="/admin/categorias" class="painel-link {{if comeca .Path "/admin/categorias"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "marcador"}}</span>Gêneros</a>
+      <p class="painel-secao">Vendas</p>
+      <a href="/admin/pedidos" class="painel-link {{if comeca .Path "/admin/pedidos"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "ficha"}}</span>Pedidos</a>
+      <a href="/admin/vendedores" class="painel-link {{if comeca .Path "/admin/vendedores"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "livreiro"}}</span>Vendedores</a>
+      <a href="/admin/ebooks" class="painel-link {{if comeca .Path "/admin/ebooks"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "pena"}}</span>Autores e editoras
+        {{if .PendingDigital}}<span class="ml-auto min-w-[1.25rem] text-center text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-caramelo-500 text-white">{{.PendingDigital}}</span>{{end}}
+      </a>
+      <a href="/admin/autores" class="painel-link {{if comeca .Path "/admin/autores"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "retrato"}}</span>Páginas de autor</a>
+      <a href="/admin/denuncias" class="painel-link {{if comeca .Path "/admin/denuncias"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "bandeira"}}</span>Denúncias
+        {{if .OpenReports}}<span class="ml-auto min-w-[1.25rem] text-center text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-canela-500 text-white">{{.OpenReports}}</span>{{end}}
+      </a>
+      <p class="painel-secao">Loja</p>
+      <a href="/admin/envio" class="painel-link {{if comeca .Path "/admin/envio"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "caixa"}}</span>Envio</a>
+      <a href="/admin/configuracoes" class="painel-link {{if comeca .Path "/admin/configuracoes"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "ajustes"}}</span>Configurações</a>
+      <a href="/" class="painel-link" target="_blank"><span class="painel-icone">{{template "icone" "livro-aberto"}}</span>Ver loja<span class="ml-auto opacity-50 scale-75">{{template "icone" "externo"}}</span></a>
     </nav>
     <div class="p-3 border-t border-forest-700">
       <form action="/admin/logout" method="post">
-        <button class="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-forest-700 hover:text-white text-sm transition">🚪 Sair</button>
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+        <button class="painel-link w-full text-left text-sm"><span class="painel-icone">{{template "icone" "porta"}}</span>Sair</button>
       </form>
     </div>
   </aside>
 
   <!-- Main -->
   <div class="flex-1 flex flex-col">
-    <header class="bg-white shadow-sm px-6 py-4 border-b border-stone-200">
-      <h1 class="text-xl font-semibold text-forest-700">{{block "admin_heading" .}}{{end}}</h1>
+    <header class="bg-papel-50 px-6 py-4 border-b border-papel-300">
+      <h1 class="font-serif text-2xl text-forest-900">{{block "admin_heading" .}}{{end}}</h1>
     </header>
     <main class="flex-1 p-6">
       {{block "admin_content" .}}{{end}}

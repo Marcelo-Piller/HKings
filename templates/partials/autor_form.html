@@ -1,0 +1,41 @@
+{{/*
+  Formulário da página do autor, igual nos painéis do vendedor e do admin.
+  Recebe dict "Autor" (*models.Author), "Acao" (URL do POST) e "CSRF".
+*/}}
+{{define "form_autor"}}
+{{$a := .Autor}}
+<form action="{{.Acao}}" method="post" enctype="multipart/form-data" class="bg-white rounded-xl shadow p-6 border border-stone-100 space-y-5">
+  <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+  <div class="flex items-center gap-4">
+    {{if $a.PhotoURL}}
+    <img src="{{$a.PhotoURL}}" alt="" class="w-20 h-20 rounded-full object-cover border border-stone-200"/>
+    {{else}}
+    <div class="w-20 h-20 rounded-full bg-stone-100 grid place-items-center font-serif text-3xl text-forest-800">{{inicial $a.Name}}</div>
+    {{end}}
+    <div>
+      <p class="font-semibold text-forest-900 text-lg">{{$a.Name}}</p>
+      <a href="/autor/{{$a.Slug}}" target="_blank" class="text-sm text-shell-600 hover:underline">Ver página pública ↗</a>
+    </div>
+  </div>
+  <div>
+    <label for="foto" class="block text-sm font-medium text-gray-700 mb-1">Foto</label>
+    <input id="foto" type="file" name="foto" accept="image/jpeg,image/png,image/webp,image/gif"
+           class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-shell-50 file:text-shell-700 file:font-medium"/>
+    {{if $a.PhotoURL}}
+    <label class="mt-2 flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" name="remover_foto" class="accent-[#1F5C3C]"/> Remover a foto atual</label>
+    {{end}}
+  </div>
+  <div>
+    <label for="bio" class="block text-sm font-medium text-gray-700 mb-1">Biografia</label>
+    <textarea id="bio" name="bio" rows="9" maxlength="5000" placeholder="Quem é, de onde vem, o que escreve, prêmios, outros livros…"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-shell-400">{{$a.Bio}}</textarea>
+    <p class="text-xs text-gray-500 mt-1">Até 5.000 caracteres. Quebras de linha são mantidas.</p>
+  </div>
+  <div>
+    <label for="site" class="block text-sm font-medium text-gray-700 mb-1">Site ou rede social (opcional)</label>
+    <input id="site" type="text" name="site" value="{{$a.Website}}" maxlength="300" placeholder="https://"
+           class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+  </div>
+  <button class="bg-forest-800 hover:bg-forest-700 text-white px-6 py-2.5 rounded-lg font-medium text-sm">Salvar página do autor</button>
+</form>
+{{end}}

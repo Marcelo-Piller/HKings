@@ -1,0 +1,7 @@
+# Arquivos executados no servidor Linux precisam de fim de linha LF mesmo quando
+# o projeto é editado no Windows; com CRLF o sh e o Caddy falham.
+*.sh        text eol=lf
+Caddyfile   text eol=lf
+*.yml       text eol=lf
+Dockerfile  text eol=lf
+.env.example text eol=lf

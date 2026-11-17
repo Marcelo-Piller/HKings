@@ -1,0 +1,31 @@
+{{template "admin_layout" .}}
+{{define "admin_heading"}}Páginas de autor{{end}}
+{{define "admin_content"}}
+{{with .Aviso}}<div class="mb-5 rounded-lg px-4 py-3 text-sm {{if $.AvisoOK}}bg-green-50 border border-green-200 text-green-800{{else}}bg-red-50 border border-red-200 text-red-700{{end}}">{{.}}</div>{{end}}
+<p class="mb-5 text-sm text-gray-600 max-w-3xl">
+  Todo nome usado no campo "autor" dos livros tem uma página pública com os livros dele. Aqui você escreve ou corrige
+  a biografia de qualquer autor; vendedores aprovados editam os autores que representam.
+</p>
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] items-start">
+  <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase"><tr><th class="text-left px-4 py-2">Autor</th><th class="px-4 py-2">Livros</th><th class="px-4 py-2">Página</th></tr></thead>
+      <tbody class="divide-y divide-gray-100">
+        {{range .Autores}}
+        <tr>
+          <td class="px-4 py-2"><a href="/admin/autores?nome={{.Name}}" class="text-indigo-600 hover:underline">{{.Name}}</a></td>
+          <td class="px-4 py-2 text-center text-gray-500">{{.Books}}</td>
+          <td class="px-4 py-2 text-center">{{if .HasPage}}<span class="text-green-700">escrita</span>{{else}}<span class="text-gray-400">vazia</span>{{end}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400">Nenhum livro com autor cadastrado.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  <div>
+    {{with .Autor}}{{template "form_autor" dict "Autor" . "Acao" (printf "/admin/autores?nome=%s" (urlquery $.Nome)) "CSRF" $.CSRFToken}}
+    {{else}}<p class="text-sm text-gray-500">Escolha um autor na lista para editar a página.</p>{{end}}
+  </div>
+</div>
+{{end}}

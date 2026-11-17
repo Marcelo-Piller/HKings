@@ -1,0 +1,37 @@
+# Proxy reverso da Livredo em produção (usado pelo docker-compose.prod.yml).
+#
+# O Caddy obtém e renova sozinho o certificado HTTPS (Let's Encrypt) assim que
+# o domínio aponta para este servidor e as portas 80 e 443 estão abertas.
+#
+# Ele também descarta o X-Forwarded-For enviado pelo cliente e grava o IP
+# real, por isso a loja pode ligar TRUSTED_PROXY=true atrás dele.
+
+livredo.com.br {
+	encode zstd gzip
+
+	# O cadastro de livro recebe o arquivo do e-book (até 60 MB, mais a foto da
+	# capa). No resto do site, fotos de até 4 MB são o maior envio.
+	@cadastro_livro path /vendedor/produtos/novo /vendedor/produtos/editar /admin/produtos/novo /admin/produtos/editar
+	@faixa_audio path /vendedor/produtos/audio /admin/produtos/audio
+	@resto_do_site not path /vendedor/produtos/novo /vendedor/produtos/editar /admin/produtos/novo /admin/produtos/editar /vendedor/produtos/audio /admin/produtos/audio
+	request_body @cadastro_livro {
+		max_size 66MB
+	}
+	# Faixa de audiobook: até 300 MB cada.
+	request_body @faixa_audio {
+		max_size 305MB
+	}
+	request_body @resto_do_site {
+		max_size 8MB
+	}
+
+	reverse_proxy loja:8080
+
+	header -Server
+}
+
+# Um endereço só: www leva para o domínio principal. As URLs cadastradas no
+# Mercado Pago e no Google usam livredo.com.br sem www.
+www.livredo.com.br {
+	redir https://livredo.com.br{uri} permanent
+}

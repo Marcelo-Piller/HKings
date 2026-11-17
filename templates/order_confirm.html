@@ -1,40 +1,246 @@
 {{template "layout" .}}
 
-{{define "title"}}Pedido Confirmado - MinhaLoja{{end}}
+{{define "title"}}Pedido nº {{.Order.ID}} — Livredo{{end}}
 
 {{define "content"}}
-<div class="max-w-2xl mx-auto px-4 py-16 text-center">
-  <div class="bg-white rounded-2xl shadow p-10 border border-stone-100">
-    <div class="text-6xl mb-4">🎉</div>
-    <h1 class="text-3xl font-bold text-forest-700 mb-2">Pedido Confirmado!</h1>
-    <p class="text-gray-500 mb-6">Seu pedido <span class="font-bold text-shell-600">#{{.Order.ID}}</span> foi recebido com sucesso.</p>
+{{$aguardando := or (eq .Order.Status "pendente") (eq .Order.Status "aguardando_pagamento")}}
+<div class="max-w-3xl mx-auto px-4 pt-14">
+  <header class="text-center surgir">
+    <svg class="w-16 h-16 mx-auto" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="31" fill="#1A4A31"/>
+      <path d="M14 22h11a7 7 0 0 1 7 7v19a5 5 0 0 0-5-5H14z" fill="none" stroke="#FCF8F1" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M50 22H39a7 7 0 0 0-7 7v19a5 5 0 0 1 5-5h13z" fill="none" stroke="#FCF8F1" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M32 28c0-6 3.5-10.5 9.5-11.5-1 6-4.5 9.8-9.5 11.5z" fill="#CC9A52"/>
+    </svg>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-6 tracking-tight">
+      {{if $aguardando}}Pedido <em class="italic text-musgo-600">recebido</em>{{else}}Obrigado pela <em class="italic text-musgo-600">leitura</em>{{end}}
+    </h1>
+    <p class="text-cafe-600 mt-4 max-w-md mx-auto leading-relaxed">
+      {{if $aguardando}}Seu pedido está reservado e aguardando a confirmação do pagamento.
+      {{else if .Order.DigitalOnly}}Seu pedido está confirmado e os livros digitais já estão na sua biblioteca.
+      {{else}}Seu pedido está confirmado. Em breve os livros seguem para a sua estante.{{end}}
+    </p>
+  </header>
 
-    <div class="bg-stone-50 rounded-xl p-5 text-left mb-6 border border-stone-200">
-      <h2 class="font-semibold text-forest-700 mb-3">Detalhes do Pedido</h2>
-      <div class="space-y-1 text-sm text-gray-600">
-        <p><span class="font-medium">Cliente:</span> {{.Order.CustomerName}}</p>
-        <p><span class="font-medium">E-mail:</span> {{.Order.CustomerEmail}}</p>
-        <p><span class="font-medium">Endereço:</span> {{.Order.Address}}</p>
-      </div>
-      <div class="mt-4 border-t border-stone-200 pt-3 space-y-1 text-sm">
-        {{range .Order.Items}}
-        <div class="flex justify-between">
-          <span>{{.ProductName}} × {{.Quantity}}</span>
-          <span class="font-medium">R$ {{printf "%.2f" .Price}}</span>
+  {{if $aguardando}}
+  <div class="mt-8 rounded-2xl bg-canela-50 border border-canela-200 px-6 py-4 text-sm text-canela-800 text-center">
+    Este pedido ainda está aguardando o pagamento.
+    {{if .Order.MPCheckoutURL}}
+    <a href="{{.Order.MPCheckoutURL}}" class="font-semibold underline decoration-canela-400 underline-offset-4 hover:text-canela-600">Retomar o pagamento</a>.
+    {{else if .Order.PixQRCode}}
+    <a href="/pix?pedido={{.Order.ID}}" class="font-semibold underline decoration-canela-400 underline-offset-4 hover:text-canela-600">Ver o QR Code do PIX</a>.
+    {{end}}
+  </div>
+  {{end}}
+
+  <!-- Ficha do pedido, como a ficha de empréstimo de uma biblioteca -->
+  <article class="relative mt-10 rounded-sm bg-papel-50 border border-papel-300 shadow-[0_24px_40px_-28px_rgba(48,34,22,.6)] overflow-hidden surgir" style="animation-delay:.1s">
+    <div class="pointer-events-none absolute inset-y-0 left-14 w-px bg-canela-300/70"></div>
+    <div class="pointer-events-none absolute inset-0 opacity-60"
+         style="background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 35px, rgba(185,160,110,.28) 35px, rgba(185,160,110,.28) 36px)"></div>
+
+    <!-- Carimbo -->
+    <div class="absolute top-6 right-6 rotate-[-8deg] border-2 {{if $aguardando}}border-canela-500 text-canela-600{{else}}border-musgo-600 text-musgo-700{{end}} rounded-md px-3 py-1 text-xs font-bold tracking-[.2em] uppercase opacity-85">
+      {{.Order.StatusLabel}}
+    </div>
+
+    <div class="relative pl-20 pr-8 py-8">
+      <p class="text-[11px] tracking-[.25em] uppercase text-cafe-500">Ficha do pedido</p>
+      <p class="font-serif text-3xl text-musgo-950 mt-1">Nº {{.Order.ID}}</p>
+
+      <dl class="mt-8 grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+        <div>
+          <dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Leitor</dt>
+          <dd class="text-cafe-800 mt-1">{{.Order.CustomerName}}</dd>
+        </div>
+        <div>
+          <dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500">E-mail</dt>
+          <dd class="text-cafe-800 mt-1 break-all">{{.Order.CustomerEmail}}</dd>
+        </div>
+        <div class="sm:col-span-2">
+          <dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Entrega em</dt>
+          <dd class="text-cafe-800 mt-1 whitespace-pre-line">{{.Order.Address}}</dd>
+        </div>
+        {{if .Order.HasPhysical}}
+        <div class="sm:col-span-2">
+          <dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Quem envia</dt>
+          <dd class="text-cafe-800 mt-1">{{with .Seller}}{{.Name}}, o vendedor deste pedido{{else}}O próprio Livredo{{end}}</dd>
+        </div>
+        {{with .Despacho}}{{if or (eq $.Order.Status "pago") (eq $.Order.Status "pronto") (eq $.Order.Status "enviado") (eq $.Order.Status "entregue")}}
+        <div class="sm:col-span-2">
+          <dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Andamento da entrega</dt>
+          <dd class="mt-3">
+            <ol class="relative border-l-2 border-papel-300 ml-2 space-y-4">
+              <li class="pl-5 relative"><span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-musgo-700"></span>
+                <p class="text-cafe-900 font-medium">Pagamento aprovado</p>
+                {{if .HasDeadline}}<p class="text-xs text-cafe-500">O vendedor tem até {{.DeadlineLabel}} para postar.</p>{{end}}</li>
+              <li class="pl-5 relative"><span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full {{if or (not .ReadyAt.IsZero) (not .PostedAt.IsZero)}}bg-musgo-700{{else}}bg-papel-300{{end}}"></span>
+                <p class="{{if or (not .ReadyAt.IsZero) (not .PostedAt.IsZero)}}text-cafe-900 font-medium{{else}}text-cafe-500{{end}}">Pronto para envio</p>
+                {{if not .ReadyAt.IsZero}}<p class="text-xs text-cafe-500">{{.ReadyLabel}}</p>{{end}}</li>
+              <li class="pl-5 relative"><span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full {{if not .PostedAt.IsZero}}bg-musgo-700{{else}}bg-papel-300{{end}}"></span>
+                <p class="{{if not .PostedAt.IsZero}}text-cafe-900 font-medium{{else}}text-cafe-500{{end}}">Postado</p>
+                {{if not .PostedAt.IsZero}}<p class="text-xs text-cafe-500">{{.PostedLabel}}</p>{{else if .Overdue}}<p class="text-xs text-canela-700">O vendedor está atrasado. O Livredo já foi avisado e está acompanhando.</p>{{end}}</li>
+              <li class="pl-5 relative"><span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full {{if eq $.Order.Status "entregue"}}bg-musgo-700{{else}}bg-papel-300{{end}}"></span>
+                <p class="{{if eq $.Order.Status "entregue"}}text-cafe-900 font-medium{{else}}text-cafe-500{{end}}">Entregue</p>
+                {{if not .DeliveredAt.IsZero}}<p class="text-xs text-cafe-500">{{.DeliveredLabel}}</p>{{end}}</li>
+            </ol>
+          </dd>
+        </div>
+        {{end}}{{end}}
+        {{with .Order.TrackingCode}}
+        <div class="sm:col-span-2">
+          <dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Rastreio</dt>
+          <dd class="mt-1"><span class="font-mono text-cafe-900">{{.}}</span>
+            <a href="{{$.Order.TrackingURL}}" target="_blank" rel="noopener" class="ml-2 text-sm text-musgo-700 underline decoration-caramelo-400 underline-offset-4 hover:text-musgo-600">acompanhar entrega</a></dd>
         </div>
         {{end}}
+        {{end}}
+      </dl>
+
+      <div class="mt-8 border-t border-dashed border-papel-400 pt-5">
+        <p class="text-[11px] tracking-[.18em] uppercase text-cafe-500 mb-3">Títulos</p>
+        <ul class="space-y-2.5">
+          {{range .Order.Items}}
+          <li class="flex items-baseline gap-3">
+            <span class="font-serif text-cafe-900">{{.ProductName}}</span>
+            {{if .Digital}}<span class="text-[10px] tracking-[.15em] uppercase text-cafe-500">E-book</span>{{else}}<span class="text-xs text-cafe-500">× {{.Quantity}}</span>{{end}}
+            <span class="flex-1 border-b border-dotted border-papel-400 translate-y-[-3px]"></span>
+            <span class="text-sm text-cafe-700 whitespace-nowrap">{{brl .Price}}</span>
+          </li>
+          {{end}}
+        </ul>
       </div>
-      <div class="mt-3 pt-3 border-t border-stone-200 flex justify-between font-bold">
-        <span>Total</span>
-        <span class="text-shell-600">{{.Order.FormattedTotal}}</span>
+
+      {{if .Order.HasPhysical}}
+      <div class="mt-4 flex items-baseline gap-3 text-sm">
+        <span class="text-cafe-600">Frete · {{.Order.ShippingLabel}}{{with .Order.Shipping.Days}} <span class="text-cafe-400">(até {{.}} dias úteis após a postagem)</span>{{end}}</span>
+        <span class="flex-1 border-b border-dotted border-papel-400 translate-y-[-3px]"></span>
+        <span class="text-cafe-700 whitespace-nowrap">{{if .Order.Shipping.Cents}}{{.Order.FormattedShipping}}{{else}}a combinar{{end}}</span>
+      </div>
+      {{end}}
+      <div class="mt-6 pt-5 border-t border-papel-400 flex items-baseline justify-between">
+        <span class="text-cafe-700">Total</span>
+        <span class="font-serif text-3xl text-canela-600">{{.Order.FormattedTotal}}</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- Livros digitais: download liberado para o dono da conta, com o pedido pago -->
+  {{if .PodeBaixar}}
+  <section class="mt-8 rounded-2xl bg-musgo-900 text-papel-50 px-6 py-6 surgir" style="animation-delay:.15s">
+    <p class="text-[11px] tracking-[.25em] uppercase text-caramelo-300"><span class="text-caramelo-400">✦</span> Seus livros digitais</p>
+    <ul class="mt-4 divide-y divide-musgo-700/70">
+      {{range .Order.Items}}{{if .Digital}}
+      <li class="flex items-center justify-between gap-4 py-3">
+        <span class="font-serif text-lg leading-snug">{{.ProductName}}</span>
+        <a href="/conta/biblioteca/baixar?livro={{.ProductID}}"
+           class="shrink-0 inline-flex items-center gap-2 bg-papel-50 hover:bg-white text-musgo-900 px-5 py-2.5 rounded-full text-sm font-medium transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+          Baixar
+        </a>
+      </li>
+      {{end}}{{end}}
+    </ul>
+    <p class="mt-3 text-sm text-papel-200/80">Eles também ficam em <a href="/conta/biblioteca" class="underline decoration-caramelo-400 underline-offset-4 hover:text-white">Minha biblioteca</a>, para baixar quando quiser.</p>
+  </section>
+  {{end}}
+
+  <!-- Comprovante: só para pedido pago -->
+  {{if .Order.IsPaid}}
+  <section class="mt-8 rounded-2xl bg-white/75 border border-papel-300 px-6 py-6 text-center surgir" style="animation-delay:.2s">
+    <p class="text-[11px] tracking-[.25em] uppercase text-cafe-500"><span class="text-caramelo-500">✦</span> Comprovante de compra</p>
+
+    {{with .EmailAviso}}
+    <p class="mt-4 rounded-xl px-4 py-3 text-sm {{if $.EmailOK}}bg-musgo-50 border border-musgo-200 text-musgo-800{{else}}bg-canela-50 border border-canela-200 text-canela-800{{end}}">{{.}}</p>
+    {{end}}
+
+    <div class="mt-5 flex flex-wrap justify-center gap-3">
+      <a href="/pedido/comprovante?id={{.Order.ID}}"
+         class="inline-flex items-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-6 py-3 rounded-full text-sm font-medium shadow-sm transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+        Baixar PDF
+      </a>
+      <form action="/pedido/comprovante/email" method="post">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+        <input type="hidden" name="id" value="{{.Order.ID}}"/>
+        <button class="inline-flex items-center gap-2 border border-musgo-700 text-musgo-800 hover:bg-musgo-50 px-6 py-3 rounded-full text-sm font-medium transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          Enviar para meu e-mail
+        </button>
+      </form>
+    </div>
+    <p class="mt-4 text-xs text-cafe-400">O e-mail vai para {{.Order.CustomerEmail}}. O comprovante não é documento fiscal.</p>
+  </section>
+  {{end}}
+
+  <!-- Vendedor: avaliação e denúncia -->
+  {{if .Seller}}
+  <section class="mt-8 rounded-2xl bg-white/75 border border-papel-300 px-6 py-6 surgir" style="animation-delay:.25s">
+    <div class="flex items-center gap-4">
+      {{template "avatar" dict "URL" .Seller.AvatarURL "Nome" .Seller.Name "Tam" "w-12 h-12" "Texto" "text-xl"}}
+      <div class="min-w-0 flex-1">
+        <p class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Vendido por</p>
+        <p class="font-serif text-lg text-cafe-900 leading-tight truncate">{{.Seller.Name}}</p>
+        <div class="mt-1">{{template "reputacao" .SellerRating}}</div>
       </div>
     </div>
 
-    <p class="text-sm text-gray-500 mb-6">Entraremos em contato pelo e-mail <strong>{{.Order.CustomerEmail}}</strong> para confirmar o envio.</p>
+    {{with .ReviewAviso}}
+    <p class="mt-5 rounded-xl px-4 py-3 text-sm {{if $.ReviewOK}}bg-musgo-50 border border-musgo-200 text-musgo-800{{else}}bg-canela-50 border border-canela-200 text-canela-800{{end}}">{{.}}</p>
+    {{end}}
 
-    <a href="/" class="inline-block bg-shell-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-shell-600 transition shadow-md">
-      Continuar Comprando
+    {{if .Review}}
+    <div class="mt-5 border-t border-dashed border-papel-400 pt-4">
+      <p class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Sua avaliação</p>
+      <p class="mt-1.5 text-lg tracking-wider" aria-label="{{.Review.Stars}} de 5 estrelas">{{range notas}}{{if le . $.Review.Stars}}<span class="text-caramelo-500">★</span>{{else}}<span class="text-papel-300">★</span>{{end}}{{end}}</p>
+      {{with .Review.Comment}}<p class="mt-1 text-sm text-cafe-700 italic">“{{.}}”</p>{{end}}
+    </div>
+    {{else if .CanReview}}
+    <form action="/pedido/avaliar" method="post" class="mt-5 border-t border-dashed border-papel-400 pt-5">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+      <input type="hidden" name="id" value="{{.Order.ID}}"/>
+      <p class="font-serif text-lg text-musgo-950">Como foi comprar com este vendedor?</p>
+      <fieldset class="avaliar-estrelas mt-2">
+        <legend class="sr-only">Nota de 1 a 5 estrelas</legend>
+        {{range notasDesc}}
+        <input type="radio" id="estrela-{{.}}" name="estrelas" value="{{.}}" required class="sr-only"/>
+        <label for="estrela-{{.}}" title="{{.}} de 5">★</label>
+        {{end}}
+      </fieldset>
+      <textarea name="comentario" rows="2" maxlength="500" placeholder="Conte como foi (opcional)"
+                class="mt-3 w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-musgo-500 focus:bg-white transition"></textarea>
+      <button class="mt-3 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-6 py-2.5 rounded-full text-sm font-medium shadow-sm transition">Enviar avaliação</button>
+    </form>
+    {{else if and .IsCustomerLoggedIn (not $aguardando)}}
+    <p class="mt-5 text-xs text-cafe-500">Você poderá avaliar o vendedor assim que o pedido for enviado.</p>
+    {{end}}
+
+    {{if .IsCustomerLoggedIn}}
+    <p class="mt-5 text-right">
+      <a href="/denunciar?vendedor={{.Seller.ID}}&pedido={{.Order.ID}}" class="inline-flex items-center gap-1 text-xs text-cafe-400 hover:text-canela-700 transition">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>
+        Teve um problema? Denunciar vendedor
+      </a>
+    </p>
+    {{end}}
+  </section>
+  {{end}}
+
+  {{if not .Order.DigitalOnly}}
+  <p class="text-sm text-cafe-500 text-center mt-8 leading-relaxed">
+    Entraremos em contato pelo e-mail <strong class="text-cafe-700 font-medium">{{.Order.CustomerEmail}}</strong> para confirmar o envio.
+  </p>
+  {{end}}
+
+  <div class="mt-8 flex flex-wrap justify-center gap-4">
+    <a href="/#acervo" class="inline-flex items-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-7 py-3.5 rounded-full font-medium shadow-sm transition">
+      Continuar escolhendo
     </a>
+    {{if .IsCustomerLoggedIn}}
+    <a href="/conta/pedidos" class="inline-flex items-center gap-2 border border-musgo-700 text-musgo-800 hover:bg-musgo-50 px-7 py-3.5 rounded-full font-medium transition">
+      Meus pedidos
+    </a>
+    {{end}}
   </div>
 </div>
 {{end}}

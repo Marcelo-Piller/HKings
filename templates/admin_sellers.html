@@ -1,0 +1,47 @@
+{{template "admin_layout" .}}
+{{define "admin_heading"}}Vendedores{{end}}
+{{define "admin_content"}}
+<div class="grid lg:grid-cols-[1fr_2fr] gap-6">
+  <form action="/admin/vendedores" method="post" class="bg-white rounded-xl shadow p-6 space-y-4 h-fit border border-stone-100">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+    <h2 class="font-semibold text-forest-700">Novo vendedor</h2>
+    {{if .Error}}<p class="text-red-600 text-sm">{{.Error}}</p>{{end}}
+    <input name="nome" required placeholder="Nome" value="{{.Nome}}" class="w-full border rounded-lg px-4 py-2.5"/>
+    <input name="usuario" required placeholder="Usuário" value="{{.Usuario}}" class="w-full border rounded-lg px-4 py-2.5"/>
+    <input type="email" name="email" required placeholder="E-mail" value="{{.Email}}" class="w-full border rounded-lg px-4 py-2.5"/>
+    <input name="documento" required inputmode="numeric" placeholder="CPF ou CNPJ" value="{{.Documento}}" class="w-full border rounded-lg px-4 py-2.5"/>
+    <input name="senha" type="password" required minlength="12" placeholder="Senha (mín. 12 caracteres)" class="w-full border rounded-lg px-4 py-2.5"/>
+    <button class="bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-medium w-full">Cadastrar</button>
+  </form>
+  <div class="bg-white rounded-xl shadow overflow-hidden border border-stone-100">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+        <tr>
+          <th class="text-left px-5 py-3">Nome</th>
+          <th class="text-left px-5 py-3">Tipo</th>
+          <th class="text-left px-5 py-3">Usuário</th>
+          <th class="text-left px-5 py-3">E-mail</th>
+          <th class="text-left px-5 py-3">CPF/CNPJ</th>
+          <th class="text-left px-5 py-3">Mercado Pago</th>
+          <th class="text-left px-5 py-3">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {{range .Sellers}}
+        <tr>
+          <td class="px-5 py-3 font-medium">{{.Name}}</td>
+          <td class="px-5 py-3">{{with .ProfileLabel}}{{.}}{{else}}<span class="text-gray-400">não informado</span>{{end}}</td>
+          <td class="px-5 py-3">{{.Username}}</td>
+          <td class="px-5 py-3">{{if .Email}}{{.Email}}{{else}}<span class="text-gray-400">—</span>{{end}}</td>
+          <td class="px-5 py-3">{{if .Document}}{{.DocumentLabel}}<br/><span class="text-xs text-gray-500">{{.Kind}}</span>{{else}}<span class="text-gray-400">—</span>{{end}}</td>
+          <td class="px-5 py-3">{{if .MPConnected}}<span class="text-green-700">Conectado</span>{{else}}<span class="text-amber-700">Não conectado</span><br/><span class="text-xs text-gray-400">livros fora da loja</span>{{end}}</td>
+          <td class="px-5 py-3">{{if .Active}}Ativo{{else}}Inativo{{end}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">Nenhum vendedor cadastrado.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{end}}

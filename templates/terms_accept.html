@@ -1,0 +1,42 @@
+{{template "layout" .}}
+
+{{define "title"}}Termos e privacidade — Livredo{{end}}
+
+{{define "content"}}
+<div class="max-w-xl mx-auto px-4 pt-14 pb-6">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> LGPD</p>
+    <h1 class="font-serif text-4xl text-musgo-950 mt-3 tracking-tight">{{if .Atualizacao}}Atualizamos nossos termos{{else}}Antes de continuar{{end}}</h1>
+    <p class="text-cafe-600 mt-3">
+      {{if .Atualizacao}}Os Termos de Uso e a Política de Privacidade mudaram em {{.VersaoLegivel}}. Leia e aceite a nova versão para continuar usando sua conta.
+      {{else}}Para usar sua conta{{if eq .Papel "vendedor"}} de vendedor{{end}}, leia e aceite os Termos de Uso e a Política de Privacidade.{{end}}
+    </p>
+  </header>
+
+  {{with .Error}}<div class="mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{{.}}</div>{{end}}
+
+  <div class="mt-8 rounded-2xl bg-white/75 border border-papel-300 p-6 text-sm text-cafe-700 leading-relaxed space-y-3">
+    <p class="font-medium text-cafe-900">Em resumo:</p>
+    <ul class="list-disc pl-5 space-y-1.5">
+      <li>Usamos seus dados só para a conta, as compras, a entrega e a segurança do site. Não vendemos dados nem fazemos publicidade direcionada.</li>
+      <li>O vendedor recebe nome, telefone e endereço para entregar o pedido; o Mercado Pago, o necessário para o pagamento. Não guardamos dados de cartão.</li>
+      <li>Usamos só cookies essenciais (sessão, sacola e segurança).</li>
+      <li>Você pode baixar seus dados, corrigi-los ou excluir a conta quando quiser, em Minha conta → Privacidade.</li>
+      {{if eq .Papel "vendedor"}}<li>Vendedores só podem usar os dados dos compradores para entregar o pedido, e e-books só podem ser vendidos por quem tem os direitos.</li>{{end}}
+    </ul>
+    <p>Leia a íntegra: <a href="/termos" target="_blank" class="text-musgo-800 underline">Termos de Uso</a> · <a href="/privacidade" target="_blank" class="text-musgo-800 underline">Política de Privacidade</a></p>
+  </div>
+
+  <form method="post" action="/termos/aceitar" class="mt-6 space-y-5">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+    <input type="hidden" name="papel" value="{{.Papel}}"/>
+    <input type="hidden" name="volta" value="{{.Volta}}"/>
+    <label class="flex items-start gap-2.5 text-sm text-cafe-700">
+      <input type="checkbox" name="aceite_termos" required class="mt-0.5 w-4 h-4 accent-[#1F5C3C] shrink-0"/>
+      <span>Li e aceito os Termos de Uso e a Política de Privacidade (versão de {{.VersaoLegivel}}).</span>
+    </label>
+    <button class="w-full bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-3.5 rounded-full font-medium shadow-sm transition">Aceitar e continuar</button>
+  </form>
+  <p class="text-center text-xs text-cafe-400 mt-5">Não quer aceitar? Você pode <a href="{{if eq .Papel "vendedor"}}/vendedor/meus-dados.json{{else}}/conta/privacidade{{end}}" class="underline">{{if eq .Papel "vendedor"}}baixar seus dados{{else}}baixar seus dados ou excluir a conta{{end}}</a>.</p>
+</div>
+{{end}}

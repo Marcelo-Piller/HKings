@@ -5,9 +5,13 @@
 {{define "admin_content"}}
 <div class="flex items-center justify-between mb-5">
   <h2 class="text-lg font-semibold text-gray-700">Lista de Produtos</h2>
-  <a href="/admin/produtos/novo" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-    + Novo Produto
-  </a>
+  <div class="flex flex-wrap gap-2 justify-end">
+    <a href="/admin/produtos/massa" class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:border-indigo-400" title="Livros vendidos pelo próprio Livredo">Edição em massa</a>
+    <a href="/admin/importar" class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:border-indigo-400">Importar planilha</a>
+    <a href="/admin/produtos/novo" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+      + Novo Produto
+    </a>
+  </div>
 </div>
 
 <div class="bg-white rounded-xl shadow overflow-hidden">
@@ -28,10 +32,11 @@
       <tr class="hover:bg-gray-50">
         <td class="px-5 py-3 text-gray-500">{{.ID}}</td>
         <td class="px-5 py-3 font-medium">{{.Name}}</td>
-        <td class="px-5 py-3 text-gray-500">{{.Category}}</td>
+        <td class="px-5 py-3 text-gray-500">{{.Category}}<br/>{{if .IsDigital}}<span class="text-xs text-cafe-700">E-book · {{.EbookTypeLabel}}</span>{{else}}{{with .ConditionLabel}}<span class="text-xs {{if eq . "Usado"}}text-canela-600{{else}}text-musgo-700{{end}}">{{.}}</span>{{else}}<span class="text-xs text-canela-600">estado não informado</span>{{end}}{{end}}</td>
         <td class="px-5 py-3">{{.FormattedPrice}}</td>
         <td class="px-5 py-3">
-          <span class="{{if gt .Stock 0}}text-green-600{{else}}text-red-500{{end}} font-medium">{{.Stock}}</span>
+          {{if .IsDigital}}<span class="text-gray-400" title="E-book não tem estoque">—</span>
+          {{else}}<span class="{{if gt .Stock 0}}text-green-600{{else}}text-red-500{{end}} font-medium">{{.Stock}}</span>{{end}}
         </td>
         <td class="px-5 py-3">
           {{if .Active}}
@@ -42,7 +47,9 @@
         </td>
         <td class="px-5 py-3 flex gap-2">
           <a href="/admin/produtos/editar?id={{.ID}}" class="text-indigo-600 hover:underline text-xs">Editar</a>
-          <form action="/admin/produtos/excluir" method="post" onsubmit="return confirm('Desativar este produto?')">
+          {{if .IsDigital}}<a href="/admin/produtos/audio?id={{.ID}}" class="text-xs text-forest-700 hover:underline whitespace-nowrap ml-2">{{if .AudioTracks}}Audiobook ({{.AudioTracks}}){{else}}+ Audiobook{{end}}</a>{{end}}
+          <form action="/admin/produtos/excluir" method="post" onsubmit="return confirm('Excluir este produto? Se ele já foi vendido, sai da loja mas continua nos pedidos antigos.')">
+			<input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
             <input type="hidden" name="id" value="{{.ID}}"/>
             <button class="text-red-500 hover:underline text-xs">Excluir</button>
           </form>

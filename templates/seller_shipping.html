@@ -1,0 +1,15 @@
+{{template "seller_layout" .}}
+{{define "seller_heading"}}Envio{{end}}
+{{define "seller_content"}}
+<div class="max-w-5xl">
+  {{with .Aviso}}
+  <div class="mb-5 rounded-xl px-4 py-3 text-sm {{if $.AvisoOK}}bg-musgo-50 border border-musgo-200 text-musgo-800{{else}}bg-canela-50 border border-canela-200 text-canela-800{{end}}">{{.}}</div>
+  {{end}}
+  {{with .Error}}<div class="mb-5 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{.}}</div>{{end}}
+  <p class="mb-5 text-sm text-gray-600 max-w-3xl">
+    O envio dos livros físicos é feito por você. O comprador paga o frete no checkout, e o valor vem junto com o da venda,
+    sem comissão do site sobre o frete. Com a conta Melhor Envio conectada, você gera a etiqueta no próprio pedido.
+  </p>
+  {{template "form_envio" dict "Origem" .Origem "Acao" "/vendedor/envio" "Para" "" "CSRF" .CSRFToken "MEDisponivel" .MEDisponivel "Sandbox" .Sandbox}}
+</div>
+{{end}}

@@ -1,0 +1,22 @@
+{{template "layout" .}}
+
+{{define "title"}}Indo para o pagamento — Livredo{{end}}
+
+{{/* Abre o Mercado Pago como navegação nova, fora do envio do formulário do
+     checkout. Ver startCardCheckout em handlers/store.go. */}}
+{{define "head_extra"}}<meta http-equiv="refresh" content="0;url={{.CheckoutURL}}">{{end}}
+
+{{define "content"}}
+<div class="max-w-md mx-auto px-4 pt-20 text-center">
+  <div class="w-14 h-14 mx-auto rounded-full border-4 border-papel-300 border-t-musgo-700 animate-spin" aria-hidden="true"></div>
+  <h1 class="font-serif text-3xl text-musgo-950 mt-8">Levando você ao <em class="italic text-musgo-600">Mercado Pago</em></h1>
+  <p class="text-cafe-600 mt-4 leading-relaxed">
+    O pedido nº {{.Order.ID}} está reservado. Você termina o pagamento, em até 12 vezes, no ambiente seguro do Mercado Pago.
+  </p>
+  <a href="{{.CheckoutURL}}"
+     class="mt-8 inline-flex items-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-7 py-3.5 rounded-full font-medium shadow-sm transition">
+    Ir para o pagamento
+  </a>
+  <p class="text-xs text-cafe-400 mt-4">Se a página não abrir sozinha em alguns segundos, use o botão acima.</p>
+</div>
+{{end}}

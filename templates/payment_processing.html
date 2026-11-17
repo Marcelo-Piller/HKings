@@ -1,0 +1,47 @@
+{{template "layout" .}}
+
+{{define "title"}}Pagamento em processamento - Pedido #{{.Order.ID}}{{end}}
+
+{{define "content"}}
+<div class="max-w-2xl mx-auto px-4 py-16 text-center">
+  <div class="bg-white rounded-2xl shadow p-10 border border-stone-100">
+    <div class="w-12 h-12 mx-auto mb-4 border-4 border-shell-400 border-t-transparent rounded-full animate-spin"></div>
+    <h1 class="text-3xl font-bold text-forest-700 mb-3">Confirmando seu pagamento</h1>
+    <p class="text-gray-600 mb-2">
+      Pedido <strong>#{{.Order.ID}}</strong> — {{.Order.FormattedTotal}}
+    </p>
+    <p class="text-gray-500 text-sm mb-6">
+      A confirmação vem do Mercado Pago e pode levar alguns instantes. Esta página se atualiza sozinha.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="/conta/pedidos" class="inline-block bg-shell-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-shell-600 transition">
+        Acompanhar pedido
+      </a>
+      <a href="/" class="inline-block bg-stone-100 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-stone-200 transition">
+        Continuar comprando
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Consulta o estado gravado pelo servidor; a confirmação nunca parte daqui.
+var orderId = {{.Order.ID}};
+var attempts = 0;
+
+var poll = setInterval(function () {
+  attempts++;
+  if (attempts > 40) { clearInterval(poll); return; } // desiste após ~2 minutos
+  fetch('/pix/status?pedido=' + orderId)
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.paid || data.status === 'pago') {
+        clearInterval(poll);
+        window.location.href = '/pedido?id=' + orderId;
+      }
+    })
+    .catch(function () {});
+}, 3000);
+</script>
+{{end}}

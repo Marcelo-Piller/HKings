@@ -1,0 +1,26 @@
+{{/*
+  Capa de um livro. Recebe um models.Product.
+
+  Com foto, mostra a foto. Sem foto (o placeholder padrão), desenha uma capa
+  tipográfica com o título de verdade, numa das cores da paleta escolhida
+  pelo ID — assim uma estante de livros ainda sem foto continua variada e
+  bonita, em vez de uma fileira de capas idênticas.
+*/}}
+{{define "capa"}}
+{{if eq .ImageURL "/static/img/placeholder.svg"}}
+<div class="capa-gerada {{capaTom .ID}}" role="img" aria-label="Capa de {{.Name}}">
+  <div class="capa-moldura">
+    <p class="capa-genero">{{.Category}}</p>
+    <div class="capa-miolo">
+      <p class="capa-titulo">{{.Name}}</p>
+      <p class="capa-florao" aria-hidden="true">✦</p>
+    </div>
+    <p class="capa-selo">{{with .Author}}{{.}}{{else}}{{.SellerLabel}}{{end}}</p>
+  </div>
+</div>
+{{else}}
+<img src="{{.ImageURL}}" alt="Capa de {{.Name}}" loading="lazy"
+     class="w-full h-full object-cover"
+     onerror="this.onerror=null;this.src='/static/img/placeholder.svg'"/>
+{{end}}
+{{end}}

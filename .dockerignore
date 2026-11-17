@@ -1,4 +1,20 @@
+# Dados e segredos nunca entram na imagem
 *.db
 *.db-wal
 *.db-shm
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+backups/
+data/
+
+# Controle de versão e metadados
 .git
+.gitignore
+.claude
+
+# Artefatos locais
+server
+*.exe

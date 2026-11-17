@@ -1,0 +1,47 @@
+{{define "seller_layout"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  {{template "brand_head" .}}
+  <title>{{block "seller_title" .}}Vendedor{{end}} — Livredo</title>
+</head>
+<body class="bg-papel-100 font-sans text-cafe-800 min-h-screen antialiased">
+<div class="flex min-h-screen flex-col md:flex-row">
+  <aside class="w-full md:w-56 bg-forest-900 text-forest-200 flex flex-col">
+    <div class="p-5 border-b border-forest-700 flex items-center gap-3">
+      <span class="w-10 h-10 rounded-xl bg-papel-50/10 text-papel-50 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "marca"}}</span>
+      <div>
+        <p class="font-serif text-lg text-white leading-none whitespace-nowrap">Livre<em class="italic text-musgo-300">do</em></p>
+        <p class="text-[10.5px] tracking-[.2em] uppercase text-caramelo-400 mt-1.5">Área do vendedor</p>
+      </div>
+    </div>
+    <nav class="flex-1 p-3 space-y-0.5 text-sm">
+      <a href="/vendedor" class="painel-link {{if eq .Path "/vendedor"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "estante"}}</span>Início</a>
+      <a href="/vendedor/produtos" class="painel-link {{if comeca .Path "/vendedor/produtos"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "livros"}}</span>Meus livros</a>
+      <a href="/vendedor/pedidos" class="painel-link {{if comeca .Path "/vendedor/pedidos"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "ficha"}}</span>Meus pedidos</a>
+      <a href="/vendedor/ebooks" class="painel-link {{if comeca .Path "/vendedor/ebooks"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "pena"}}</span>Livros digitais</a>
+      <a href="/vendedor/autores" class="painel-link {{if comeca .Path "/vendedor/autores"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "retrato"}}</span>Páginas de autor</a>
+      <a href="/vendedor/envio" class="painel-link {{if comeca .Path "/vendedor/envio"}}ativo{{end}}"><span class="painel-icone">{{template "icone" "caixa"}}</span>Envio</a>
+      <a href="/" class="painel-link" target="_blank"><span class="painel-icone">{{template "icone" "livro-aberto"}}</span>Ver loja<span class="ml-auto opacity-50 scale-75">{{template "icone" "externo"}}</span></a>
+    </nav>
+    <div class="p-3 border-t border-forest-700 text-sm">
+      <a href="/vendedor#perfil" class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-forest-700 transition">
+        {{template "avatar" dict "URL" .Seller.AvatarURL "Nome" .Seller.Name "Tam" "w-8 h-8" "Texto" "text-sm"}}
+        <span class="text-forest-200 truncate font-medium">{{.Seller.Name}}</span>
+      </a>
+      <form action="/vendedor/logout" method="post">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+        <button class="painel-link w-full text-left"><span class="painel-icone">{{template "icone" "porta"}}</span>Sair</button>
+      </form>
+    </div>
+  </aside>
+  <div class="flex-1 flex flex-col">
+    <header class="bg-papel-50 border-b border-papel-300 px-6 py-4">
+      <h1 class="font-serif text-2xl text-forest-900">{{block "seller_heading" .}}{{end}}</h1>
+    </header>
+    <main class="flex-1 p-6">{{block "seller_content" .}}{{end}}</main>
+  </div>
+</div>
+</body>
+</html>
+{{end}}

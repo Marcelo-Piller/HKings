@@ -1,0 +1,208 @@
+{{/*
+  Envio: endereço de despacho + conta Melhor Envio (form_envio) e o bloco de
+  frete/etiqueta na página do pedido (envio_pedido). Usados pelo painel do
+  vendedor e pelo admin (para os livros vendidos pelo próprio site).
+
+  form_envio:   dict "Origem" <ShippingOrigin> "Acao" <url do POST> "Para" <"" ou "admin"> "CSRF" <token> "MEDisponivel" <bool> "Sandbox" <bool>
+  envio_pedido: dict "Order" <Order> "Origem" <ShippingOrigin> "Acao" <url do POST> "CSRF" <token> "Config" <url da página de envio>
+*/}}
+
+{{define "form_envio"}}
+<div class="grid lg:grid-cols-[3fr_2fr] gap-6">
+  <form method="post" action="{{.Acao}}" class="bg-white rounded-xl shadow p-6 space-y-4 border border-stone-100">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+    <div>
+      <h2 class="font-semibold text-forest-800">De onde você despacha</h2>
+      <p class="text-xs text-gray-500 mt-1">Usado para calcular o frete no checkout e como remetente da etiqueta.</p>
+    </div>
+    <div class="grid grid-cols-[1fr_2fr] gap-3">
+      <label class="text-sm text-gray-700">CEP *
+        <input name="cep" required inputmode="numeric" maxlength="9" value="{{.Origem.PostalCode}}" placeholder="00000-000" data-cep
+               class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"/>
+      </label>
+      <label class="text-sm text-gray-700">Rua *
+        <input name="rua" required maxlength="120" value="{{.Origem.Street}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"/>
+      </label>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      <label class="text-sm text-gray-700">Número *
+        <input name="numero" required maxlength="20" value="{{.Origem.Number}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"/>
+      </label>
+      <label class="col-span-2 text-sm text-gray-700">Complemento
+        <input name="complemento" maxlength="120" value="{{.Origem.Complement}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"/>
+      </label>
+    </div>
+    <div class="grid grid-cols-[2fr_2fr_1fr] gap-3">
+      <label class="text-sm text-gray-700">Bairro *
+        <input name="bairro" required maxlength="120" value="{{.Origem.District}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"/>
+      </label>
+      <label class="text-sm text-gray-700">Cidade *
+        <input name="cidade" required maxlength="120" value="{{.Origem.City}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"/>
+      </label>
+      <label class="text-sm text-gray-700">UF *
+        <input name="uf" required maxlength="2" value="{{.Origem.State}}" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 uppercase"/>
+      </label>
+    </div>
+    <label class="block text-sm text-gray-700">Telefone
+      <input name="telefone" type="tel" maxlength="30" value="{{.Origem.Phone}}" placeholder="(11) 99999-9999" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"/>
+    </label>
+    <button class="bg-forest-800 hover:bg-forest-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition">Salvar endereço</button>
+  </form>
+
+  <div class="bg-white rounded-xl shadow p-6 border border-stone-100 h-fit">
+    <h2 class="font-semibold text-forest-800">Conta Melhor Envio</h2>
+    {{if .Origem.MEConnected}}
+    <p class="mt-2 text-sm text-green-700 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-600"></span>Conectada{{if .Sandbox}} (ambiente de testes){{end}}</p>
+    <p class="text-xs text-gray-500 mt-2">As etiquetas são pagas com o saldo da sua conta Melhor Envio. Mantenha saldo lá antes de gerar.</p>
+    <form method="post" action="/melhorenvio/desconectar" class="mt-4"
+          onsubmit="return confirm('Desconectar a conta Melhor Envio? Você não conseguirá gerar etiquetas pelo site até conectar de novo.')">
+      <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+      <input type="hidden" name="para" value="{{.Para}}"/>
+      <button class="text-sm text-canela-700 hover:underline">Desconectar</button>
+    </form>
+    {{else}}
+    <p class="mt-2 text-sm text-gray-600">Conecte sua conta para o frete ser calculado com os seus preços e para gerar as etiquetas aqui mesmo, no pedido.</p>
+    {{if .MEDisponivel}}
+    <a href="/melhorenvio/conectar{{if .Para}}?para={{.Para}}{{end}}"
+       class="mt-4 inline-flex items-center gap-2 bg-forest-800 hover:bg-forest-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition">Conectar Melhor Envio</a>
+    <p class="text-xs text-gray-400 mt-3">Não tem conta? Crie grátis em melhorenvio.com.br.</p>
+    {{else}}
+    <p class="mt-4 text-sm text-gray-500">A conexão ainda não foi ativada pela loja.</p>
+    {{end}}
+    {{end}}
+    <p class="text-xs text-gray-400 mt-4 border-t border-stone-100 pt-3">Sem a conta conectada, o comprador ainda vê o frete calculado pela loja, e você informa o código de rastreio à mão no pedido.</p>
+  </div>
+</div>
+{{template "script_cep"}}
+{{end}}
+
+{{/* Preenche rua, bairro, cidade e UF a partir do CEP (consulta no próprio site). */}}
+{{define "script_cep"}}
+<script>
+(function () {
+  document.querySelectorAll('input[data-cep]').forEach(function (campo) {
+    campo.addEventListener('change', function () {
+      var cep = campo.value.replace(/\D/g, '');
+      if (cep.length !== 8) return;
+      var form = campo.closest('form');
+      fetch('/frete/cotar?cep=' + cep + '&so_endereco=1', { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.endereco) return;
+          [['rua', d.endereco.rua], ['bairro', d.endereco.bairro], ['cidade', d.endereco.cidade], ['uf', d.endereco.uf]].forEach(function (par) {
+            var el = form.querySelector('[name="' + par[0] + '"]');
+            if (el && par[1]) el.value = par[1];
+          });
+        }).catch(function () {});
+    });
+  });
+})();
+</script>
+{{end}}
+
+{{define "envio_pedido"}}
+{{$o := .Order}}
+<div class="border-t border-stone-200 pt-4">
+  <h3 class="font-semibold text-forest-700 mb-3">Envio</h3>
+  {{if $o.DigitalOnly}}
+  <p class="text-sm text-gray-600">Pedido só de livros digitais: entregue por download, nada a enviar.</p>
+  {{else}}
+  <div class="grid sm:grid-cols-2 gap-3 text-sm">
+    <div><p class="text-gray-500">Frete</p><p class="font-medium">{{$o.ShippingLabel}}{{if $o.Shipping.Cents}} · {{$o.FormattedShipping}}{{end}}</p>
+      {{if $o.Shipping.Days}}<p class="text-xs text-gray-500">Prazo informado ao comprador: {{$o.Shipping.Days}} dias úteis após a postagem</p>{{end}}</div>
+  </div>
+
+  {{if $o.LabelURL}}
+  <div class="mt-4 rounded-lg bg-green-50 border border-green-200 p-4 text-sm">
+    <p class="font-semibold text-green-800">Etiqueta gerada</p>
+    <a href="{{$o.LabelURL}}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 bg-forest-800 hover:bg-forest-700 text-white px-4 py-2 rounded-lg font-semibold">Imprimir etiqueta</a>
+    <p class="text-xs text-gray-600 mt-2">Cole no pacote e poste numa agência dos Correios. Depois marque o pedido como enviado.</p>
+  </div>
+  {{else if $o.CanGenerateLabel}}
+  {{if and .Origem.MEConnected .Origem.Complete}}
+  <form method="post" action="{{.Acao}}" class="mt-4 rounded-lg bg-stone-50 border border-stone-200 p-4 space-y-3"
+        onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Gerando…'">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+    <input type="hidden" name="acao" value="etiqueta"/>
+    <label class="block text-xs text-gray-600">Chave da NF-e <span class="text-gray-400">(opcional; em branco, vai com declaração de conteúdo)</span>
+      <input name="nfe" inputmode="numeric" maxlength="60" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"/>
+    </label>
+    <button class="bg-forest-800 hover:bg-forest-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Gerar etiqueta ({{$o.FormattedShipping}} do seu saldo Melhor Envio)</button>
+  </form>
+  {{else}}
+  <p class="mt-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+    Para gerar a etiqueta aqui, {{if not .Origem.Complete}}cadastre o endereço de envio e {{end}}conecte sua conta Melhor Envio em <a href="{{.Config}}" class="underline font-medium">Envio</a>.
+  </p>
+  {{end}}
+  {{end}}
+
+  {{if $o.IsPaid}}
+  <form method="post" action="{{.Acao}}" class="mt-4 flex flex-wrap items-end gap-2">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+    <input type="hidden" name="acao" value="rastreio"/>
+    <label class="text-xs text-gray-600">Código de rastreio
+      <input name="codigo" value="{{$o.TrackingCode}}" maxlength="40" placeholder="Ex.: AA123456789BR" class="mt-1 block border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono uppercase"/>
+    </label>
+    <button class="border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium">Salvar código</button>
+  </form>
+  {{if $o.MEOrderID}}
+  <form method="post" action="{{.Acao}}" class="mt-2">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+    <input type="hidden" name="acao" value="atualizar_rastreio"/>
+    <button class="text-xs text-forest-700 hover:underline">Buscar código no Melhor Envio</button>
+  </form>
+  {{end}}
+  {{end}}
+  {{end}}
+</div>
+{{end}}
+
+{{define "passos_despacho"}}
+{{$o := .Order}}{{$d := .D}}
+<div class="space-y-4">
+  {{if $d.HasDeadline}}
+  <div class="rounded-lg px-4 py-3 text-sm {{if $d.Overdue}}bg-red-50 border border-red-200 text-red-800{{else if $d.PostedAt.IsZero}}bg-caramelo-100 border border-caramelo-300 text-canela-800{{else if $d.Late}}bg-stone-50 border border-stone-200 text-gray-700{{else}}bg-musgo-50 border border-musgo-200 text-musgo-800{{end}}">
+    {{if $d.PostedAt.IsZero}}
+    <p class="font-semibold">{{if $d.Overdue}}Prazo de postagem vencido — {{$d.TimeLeftLabel}}{{else}}Poste até {{$d.DeadlineLabel}} ({{$d.TimeLeftLabel}}){{end}}</p>
+    <p class="text-xs mt-1">{{with .SLA}}Seu prazo: {{.}} depois do pagamento. {{end}}Postar no mesmo dia rende a medalha Envio Rápido; atrasos reduzem a exposição e podem pausar a loja.</p>
+    {{else}}
+    <p class="font-semibold">Postado em {{$d.PostedLabel}} {{if $d.Late}}(depois do prazo de {{$d.DeadlineLabel}}){{else}}— no prazo{{end}}</p>
+    {{end}}
+  </div>
+  {{end}}
+  <ol class="grid grid-cols-4 gap-2 text-center text-xs">
+    {{range $i, $passo := list "pago" "pronto" "enviado" "entregue"}}
+    {{$feito := or (and (eq $passo "pago") true) (and (eq $passo "pronto") (not $d.ReadyAt.IsZero)) (and (eq $passo "enviado") (not $d.PostedAt.IsZero)) (and (eq $passo "entregue") (eq $o.Status "entregue"))}}
+    <li class="rounded-lg px-2 py-2 border {{if $feito}}bg-forest-800 text-white border-forest-800{{else}}bg-white text-gray-500 border-stone-200{{end}}">
+      {{if eq $passo "pago"}}Pago{{else if eq $passo "pronto"}}Pronto para envio{{if not $d.ReadyAt.IsZero}}<br><span class="opacity-75">{{$d.ReadyLabel}}</span>{{end}}{{else if eq $passo "enviado"}}Postado{{if not $d.PostedAt.IsZero}}<br><span class="opacity-75">{{$d.PostedLabel}}</span>{{end}}{{else}}Entregue{{if not $d.DeliveredAt.IsZero}}<br><span class="opacity-75">{{$d.DeliveredLabel}}</span>{{end}}{{end}}
+    </li>
+    {{end}}
+  </ol>
+  {{if eq $o.Status "pago"}}
+  <form method="post" action="{{.Acao}}">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+    <input type="hidden" name="status" value="pronto"/>
+    <button class="w-full sm:w-auto bg-forest-800 hover:bg-forest-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold">1. Pronto para envio</button>
+    <span class="text-xs text-gray-500 ml-2">Livro separado e embalado. O comprador recebe um e-mail.</span>
+  </form>
+  {{end}}
+  {{if or (eq $o.Status "pago") (eq $o.Status "pronto")}}
+  <form method="post" action="{{.Acao}}" class="flex flex-wrap items-center gap-2">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+    <input type="hidden" name="status" value="enviado"/>
+    <input name="codigo" value="{{$o.TrackingCode}}" placeholder="Código de rastreio (ex.: AA123456789BR)" maxlength="40"
+           class="flex-1 min-w-[14rem] border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"/>
+    <button class="bg-forest-800 hover:bg-forest-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold">2. Postado</button>
+    <p class="w-full text-xs text-gray-500">Marque quando entregar aos Correios ou à transportadora. Com etiqueta do Melhor Envio, a postagem e a entrega são atualizadas sozinhas pelo rastreio.</p>
+  </form>
+  {{end}}
+  {{if eq $o.Status "enviado"}}
+  <form method="post" action="{{.Acao}}" class="flex items-center gap-3">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}"/>
+    <input type="hidden" name="status" value="entregue"/>
+    <button class="px-4 py-2 rounded-lg border border-stone-300 text-sm font-medium hover:border-forest-500">Marcar como entregue</button>
+    <span class="text-xs text-gray-500">Só se o comprador confirmou o recebimento ou o rastreio mostrar a entrega.</span>
+  </form>
+  {{end}}
+</div>
+{{end}}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  {{template "brand_head" .}}
+  <title>Venda seus livros — Livredo</title>
+</head>
+<body class="papel-textura font-sans text-cafe-800 min-h-screen flex items-center justify-center p-4 antialiased">
+<div class="bg-white/85 w-full max-w-md rounded-3xl p-9 border border-papel-300 shadow-[0_30px_50px_-35px_rgba(48,34,22,.65)]">
+  <p class="font-serif text-lg text-musgo-700">Livre<em class="italic">do</em></p>
+  <h1 class="font-serif text-4xl text-musgo-950 mt-1">Venda seus <em class="italic text-musgo-600">livros</em></h1>
+  <p class="text-sm text-cafe-500 mt-2 mb-6">Crie sua conta e dê uma nova casa aos seus livros.</p>
+
+  {{if .Error}}
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{{.Error}}</div>
+  {{end}}
+
+  <form action="/vendedor/cadastro" method="post" class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+      <input name="nome" required autofocus value="{{.Nome}}"
+             class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+      <input name="usuario" required autocomplete="username" value="{{.Usuario}}"
+             class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+      <input type="email" name="email" required autocomplete="email" value="{{.Email}}"
+             placeholder="voce@email.com"
+             class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+      <p class="text-xs text-gray-400 mt-1">Usado para identificar sua conta e recuperar o acesso.</p>
+    </div>
+    <fieldset>
+      <legend class="block text-sm font-medium text-gray-700 mb-2">Você é</legend>
+      <div class="space-y-2">
+        {{range .Perfis}}
+        <label class="flex items-start gap-2.5 border border-papel-300 bg-papel-50 rounded-xl px-4 py-2.5 cursor-pointer has-[:checked]:border-musgo-600 has-[:checked]:bg-musgo-50 transition">
+          <input type="radio" name="perfil" value="{{.Key}}" required {{if eq .Key $.Perfil}}checked{{end}} class="mt-1 accent-[#1F5C3C]"/>
+          <span><span class="block text-sm font-medium text-cafe-900">{{.Label}}</span><span class="block text-xs text-gray-500">{{.Hint}}</span></span>
+        </label>
+        {{end}}
+      </div>
+    </fieldset>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">CPF ou CNPJ</label>
+      <input name="documento" required inputmode="numeric" value="{{.Documento}}"
+             placeholder="000.000.000-00 ou 00.000.000/0000-00"
+             class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+      <p class="text-xs text-gray-400 mt-1">Só números também funciona. Cada CPF/CNPJ pode ter só uma conta de vendedor.</p>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+        <input type="password" name="senha" required minlength="12" autocomplete="new-password"
+               class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar</label>
+        <input type="password" name="confirmar_senha" required minlength="12" autocomplete="new-password"
+               class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+      </div>
+    </div>
+    <p class="text-xs text-gray-400">Mínimo de 12 caracteres.</p>
+    <label class="flex items-start gap-2.5 text-sm text-gray-700">
+      <input type="checkbox" name="aceite_termos" required class="mt-0.5 w-4 h-4 accent-[#1F5C3C] shrink-0"/>
+      <span>Li e aceito os <a href="/termos" target="_blank" class="text-musgo-800 underline">Termos de Uso</a> (inclusive as regras para vendedores)
+        e a <a href="/privacidade" target="_blank" class="text-musgo-800 underline">Política de Privacidade</a>.</span>
+    </label>
+    <button class="w-full bg-musgo-800 hover:bg-musgo-700 text-papel-50 rounded-full py-2.5 font-semibold transition">
+      Criar conta
+    </button>
+  </form>
+
+  <p class="text-sm text-gray-500 text-center mt-6">
+    Já tem conta?
+    <a href="/vendedor/login" class="text-musgo-700 font-medium underline decoration-caramelo-400 underline-offset-4">Entrar</a>
+  </p>
+</div>
+</body>
+</html>

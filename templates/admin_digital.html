@@ -1,0 +1,57 @@
+{{template "admin_layout" .}}
+{{define "admin_heading"}}Autores e editoras{{end}}
+{{define "admin_content"}}
+<p class="mb-4 text-sm text-gray-600 max-w-3xl">
+  Só vende e-book quem for aprovado aqui. <strong>Autor(a)</strong> só consegue cadastrar e-books com os nomes aprovados abaixo;
+  <strong>editora parceira</strong> publica qualquer autor. Confira a comprovação antes de aprovar (ISBN, registro, perfil público,
+  contrato). Revogar tira da loja, na hora, todos os e-books do vendedor.
+</p>
+
+<nav class="mb-5 flex flex-wrap gap-2 text-sm">
+  {{range $f := list "" "pendente" "aprovado" "recusado"}}
+  <a href="/admin/ebooks{{with $f}}?status={{.}}{{end}}"
+     class="px-4 py-1.5 rounded-full border {{if eq $f $.Filtro}}bg-forest-800 text-white border-forest-800{{else}}bg-white border-stone-200 text-gray-600 hover:border-forest-500{{end}}">
+    {{if eq $f ""}}Todos{{else if eq $f "pendente"}}Em análise{{else if eq $f "aprovado"}}Aprovados{{else}}Recusados{{end}}</a>
+  {{end}}
+</nav>
+
+{{with .Error}}<div class="mb-5 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{.}}</div>{{end}}
+
+<div class="space-y-4">
+  {{range .Pedidos}}
+  <article class="bg-white rounded-xl shadow border {{if .Pending}}border-caramelo-300{{else}}border-stone-100{{end}} p-5">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p class="font-semibold text-forest-900">{{.SellerName}} <span class="font-normal text-gray-500">· {{.KindLabel}}</span></p>
+        <p class="text-xs text-gray-500 mt-0.5">{{.SellerEmail}}{{with .SellerDocument}} · {{if eq (len .) 14}}CNPJ{{else}}CPF{{end}}{{end}} · {{.UpdatedAt}}</p>
+      </div>
+      <span class="text-xs font-semibold px-3 py-1 rounded-full
+        {{if .Approved}}bg-musgo-100 text-musgo-800{{else if .Pending}}bg-caramelo-100 text-caramelo-800{{else}}bg-canela-100 text-canela-800{{end}}">{{.StatusLabel}}</span>
+    </div>
+
+    <p class="mt-3 text-xs uppercase tracking-wide text-gray-500">Comprovação enviada</p>
+    <p class="mt-1 text-sm text-gray-800 whitespace-pre-line bg-papel-50 border border-papel-200 rounded-lg px-4 py-3">{{.Request}}</p>
+    {{with .Note}}<p class="mt-2 text-xs text-gray-500">Observação: {{.}}</p>{{end}}
+
+    <form method="post" action="/admin/ebooks" class="mt-4 grid lg:grid-cols-[2fr_2fr_auto] gap-3 items-end">
+      <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+      <input type="hidden" name="vendedor" value="{{.SellerID}}"/>
+      <input type="hidden" name="status" value="{{$.Filtro}}"/>
+      <label class="text-xs text-gray-500">Nomes de autor aprovados (um por linha){{if eq .Kind "editora"}} — opcional para editora{{end}}
+        <textarea name="autores" rows="2" class="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-gray-800">{{.AuthorsText}}</textarea>
+      </label>
+      <label class="text-xs text-gray-500">Observação para o vendedor (obrigatória ao recusar ou revogar)
+        <textarea name="nota" rows="2" maxlength="1000" class="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-gray-800">{{.Note}}</textarea>
+      </label>
+      <div class="flex gap-2">
+        <button name="acao" value="aprovar" class="bg-forest-800 hover:bg-forest-700 text-white px-4 py-2 rounded-lg text-sm font-medium">{{if .Approved}}Atualizar{{else}}Aprovar{{end}}</button>
+        <button name="acao" value="recusar" class="border border-red-300 text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium"
+                {{if .Approved}}onclick="return confirm('Revogar? Todos os e-books deste vendedor saem da loja na hora.')"{{end}}>{{if .Approved}}Revogar{{else}}Recusar{{end}}</button>
+      </div>
+    </form>
+  </article>
+  {{else}}
+  <div class="bg-white rounded-xl shadow border border-stone-100 px-5 py-12 text-center text-gray-400">Nenhum pedido {{if .Filtro}}nesta situação{{else}}ainda{{end}}.</div>
+  {{end}}
+</div>
+{{end}}

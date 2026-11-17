@@ -1,0 +1,100 @@
+{{template "layout" .}}
+
+{{define "title"}}Política de Privacidade — Livredo{{end}}
+
+{{define "content"}}
+<article class="doc-legal max-w-3xl mx-auto px-4 pt-12 pb-6 text-cafe-800 leading-[1.8]">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> LGPD · Lei 13.709/2018</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Política de Privacidade</h1>
+    <p class="text-sm text-cafe-500 mt-3">Versão de {{.VersaoLegivel}}</p>
+  </header>
+
+  <p class="mt-10">Esta política explica quais dados pessoais o {{.Controlador}} trata quando você usa o site {{.Site}}, para quê, com quem eles são compartilhados, por quanto tempo ficam guardados e como você exerce os seus direitos. Ela faz parte dos <a href="/termos">Termos de Uso</a>.</p>
+
+  <h2>1. Quem é o responsável pelos seus dados</h2>
+  <p>O controlador dos dados é <strong>{{.Controlador}}</strong>{{with .Documento}}, inscrito sob o nº {{.}}{{end}}.
+    {{if .EmailDPO}}O encarregado pelo tratamento de dados pessoais (DPO){{with .Encarregado}} é {{.}} e{{end}} atende pelo e-mail <a href="mailto:{{.EmailDPO}}">{{.EmailDPO}}</a>.
+    {{else}}O encarregado pelo tratamento de dados pessoais (DPO) atende pela página <a href="/conta/privacidade">Minha conta → Privacidade</a>.{{end}}</p>
+  <p>O Livredo é um marketplace: cada livro é vendido por um vendedor independente (ou pelo próprio Livredo). Quando você compra de um vendedor, ele também passa a tratar os dados necessários para entregar o pedido e responde por esse uso.</p>
+
+  <h2>2. Quais dados coletamos</h2>
+  <ul>
+    <li><strong>Conta de cliente:</strong> nome, e-mail, senha (guardada só como hash, que não pode ser revertido), telefone, endereço e foto de perfil, se você enviar. Ao entrar com o Google, recebemos do Google apenas nome, e-mail e um identificador da conta.</li>
+    <li><strong>Compras:</strong> nome, e-mail, telefone, endereço de entrega, CPF ou CNPJ (exigido para emitir a etiqueta de envio), livros comprados, valores, forma de pagamento e situação do pedido. <strong>Não recebemos nem guardamos os dados do seu cartão</strong>: o pagamento é feito no Mercado Pago.</li>
+    <li><strong>Conta de vendedor:</strong> nome, usuário, e-mail, CPF ou CNPJ, tipo de vendedor, endereço de despacho, foto, identificação da conta do Mercado Pago conectada, livros anunciados e, para quem vende e-books, a comprovação dos direitos sobre as obras.</li>
+    <li><strong>Avaliações e denúncias</strong> que você escreve.</li>
+    <li><strong>Dados técnicos:</strong> endereço IP, data e hora de acesso, navegador e registros de segurança (tentativas de login, por exemplo).</li>
+    <li><strong>Aceites:</strong> data, hora, IP e versão destes documentos cada vez que você os aceita.</li>
+  </ul>
+
+  <h2>3. Para que usamos e com qual base legal</h2>
+  <ul>
+    <li><strong>Criar e manter sua conta, processar compras, entregar pedidos e e-books, emitir comprovantes e atender você</strong> — execução de contrato (art. 7º, V).</li>
+    <li><strong>Guardar registros de compras e de acesso exigidos por lei</strong> (legislação fiscal, Código de Defesa do Consumidor e Marco Civil da Internet) — cumprimento de obrigação legal (art. 7º, II).</li>
+    <li><strong>Prevenir fraudes, pirataria e abusos, proteger contas e melhorar o site</strong> — legítimo interesse (art. 7º, IX), sempre limitado ao necessário.</li>
+    <li><strong>Exercer direitos em processos</strong> — art. 7º, VI.</li>
+  </ul>
+  <p>Não vendemos seus dados, não fazemos publicidade direcionada e não usamos ferramentas de rastreamento de terceiros.</p>
+
+  <h2>4. Com quem compartilhamos</h2>
+  <ul>
+    <li><strong>Vendedor do livro:</strong> nome, telefone, e-mail e endereço de entrega, para enviar o pedido.</li>
+    <li><strong>Mercado Pago:</strong> dados do pedido e do comprador necessários para o pagamento.</li>
+    <li><strong>Melhor Envio e transportadoras (Correios e outras):</strong> nome, endereço, CPF ou CNPJ e dados do pacote, para gerar a etiqueta e entregar.</li>
+    <li><strong>Google:</strong> quando você escolhe entrar com o Google; e consultas de ISBN feitas por vendedores (só o número do livro, nenhum dado seu).</li>
+    <li><strong>Hospedagem e e-mail:</strong> provedores que guardam o site e enviam os e-mails de confirmação, sob contrato e só para esse fim.</li>
+    <li><strong>Autoridades</strong>, quando houver ordem judicial ou obrigação legal.</li>
+  </ul>
+  <p>Alguns desses parceiros (Google, Mercado Pago e as redes que entregam as fontes e bibliotecas do site) podem armazenar dados fora do Brasil, em países com proteção adequada ou sob as garantias do art. 33 da LGPD.</p>
+
+  <h2>5. Cookies</h2>
+  <p>Usamos apenas cookies <strong>essenciais</strong>: o da sessão (para manter você logado), o da sacola de compras e o de proteção dos formulários contra fraudes. Sem eles o site não funciona. Não usamos cookies de publicidade ou de análise de terceiros.</p>
+
+  <h2>6. Por quanto tempo guardamos</h2>
+  <ul>
+    <li><strong>Dados da conta:</strong> enquanto ela existir. Ao excluir a conta, apagamos nome, e-mail, telefone, endereço, foto e senha.</li>
+    <li><strong>Pedidos pagos:</strong> 5 anos, como exigem a legislação fiscal e a de consumo, mesmo depois da exclusão da conta.</li>
+    <li><strong>Registros de acesso:</strong> 6 meses (Marco Civil da Internet, art. 15).</li>
+    <li><strong>Registros de aceite</strong> destes documentos: enquanto puderem ser necessários para comprovar o consentimento.</li>
+  </ul>
+
+  <h2>7. Como protegemos</h2>
+  <p>Conexão sempre criptografada (HTTPS), senhas guardadas com bcrypt, chaves de acesso criptografadas no banco, cópias de segurança, acesso restrito ao painel e limite de tentativas de login. Se acontecer um incidente de segurança que possa causar risco ou dano relevante, avisaremos você e a ANPD, como manda o art. 48.</p>
+
+  <h2>8. Seus direitos</h2>
+  <p>Pelo art. 18 da LGPD, você pode, a qualquer momento e de graça:</p>
+  <ul>
+    <li>confirmar se tratamos seus dados e <strong>acessá-los</strong>;</li>
+    <li><strong>corrigir</strong> dados incompletos ou errados;</li>
+    <li>pedir <strong>anonimização, bloqueio ou eliminação</strong> de dados desnecessários ou tratados em desacordo com a lei;</li>
+    <li>pedir a <strong>portabilidade</strong> dos dados;</li>
+    <li>pedir a <strong>exclusão</strong> dos dados, exceto os que a lei obriga a guardar;</li>
+    <li>saber <strong>com quem</strong> compartilhamos seus dados;</li>
+    <li><strong>revogar o consentimento</strong>, quando ele for a base do tratamento;</li>
+    <li>reclamar à <strong>Autoridade Nacional de Proteção de Dados (ANPD)</strong>.</li>
+  </ul>
+  <p>Clientes fazem quase tudo sozinhos em <a href="/conta/privacidade">Minha conta → Privacidade</a>: baixar todos os dados (arquivo JSON), ver o histórico de aceites, corrigir dados e excluir a conta. Vendedores baixam os dados no painel.
+    {{if .EmailDPO}}Para qualquer outro pedido, escreva para <a href="mailto:{{.EmailDPO}}">{{.EmailDPO}}</a>.{{end}}
+    Respondemos em até 15 dias.</p>
+
+  <h2>9. Crianças e adolescentes</h2>
+  <p>O cadastro e as compras são para maiores de 18 anos. Menores podem usar o site com um responsável legal, que cria a conta e faz as compras.</p>
+
+  <h2>10. Mudanças nesta política</h2>
+  <p>Quando esta política mudar, a data da versão no topo muda e pediremos que você leia e aceite de novo no próximo acesso.</p>
+
+  <p class="mt-10 text-sm text-cafe-500">Versão {{.Versao}}.</p>
+</article>
+{{template "doc_estilo"}}
+{{end}}
+
+{{define "doc_estilo"}}
+<style>
+  .doc-legal h2 { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; color: #0B2317; margin-top: 2.5rem; margin-bottom: .5rem; letter-spacing: -0.01em; }
+  .doc-legal p { margin-top: .9rem; }
+  .doc-legal ul { margin-top: .75rem; padding-left: 1.25rem; list-style: disc; }
+  .doc-legal li { margin-top: .4rem; }
+  .doc-legal a { color: #1A4A31; text-decoration: underline; text-underline-offset: 3px; }
+</style>
+{{end}}

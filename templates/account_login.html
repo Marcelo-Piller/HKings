@@ -1,0 +1,53 @@
+{{template "layout" .}}
+
+{{define "title"}}Entrar — Livredo{{end}}
+
+{{define "content"}}
+<div class="max-w-md mx-auto px-4 pt-16">
+  <div class="relative rounded-3xl bg-white/80 border border-papel-300 p-9 shadow-[0_30px_50px_-35px_rgba(48,34,22,.65)] surgir">
+    <div class="text-center">
+      <p class="text-caramelo-500 text-xl" aria-hidden="true">❦</p>
+      <h1 class="font-serif text-4xl text-musgo-950 mt-2">Bem-vindo <em class="italic text-musgo-600">de volta</em></h1>
+      <p class="text-sm text-cafe-500 mt-3">Entre para acompanhar seus pedidos.</p>
+    </div>
+
+    {{if .Error}}
+    <div class="mt-6 rounded-xl bg-canela-50 border border-canela-200 px-4 py-3 text-sm text-canela-800">{{.Error}}</div>
+    {{end}}
+
+    {{if .MotivoEbook}}
+    <div class="mt-6 rounded-xl bg-camurca-100 border border-camurca-200 px-4 py-3 text-sm text-musgo-800">
+      Livros digitais ficam guardados na <strong class="font-medium">sua biblioteca</strong>. Entre ou crie uma conta para continuar a compra.
+    </div>
+    {{end}}
+
+    {{template "botao_google" .}}
+
+    <form action="/conta/entrar" method="post" class="mt-6 space-y-5">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+      {{with .Volta}}<input type="hidden" name="volta" value="{{.}}"/>{{end}}
+      <div>
+        <label for="email" class="block text-sm text-cafe-600 mb-1.5">E-mail</label>
+        <input id="email" type="email" name="email" required autofocus autocomplete="email" value="{{.Email}}"
+               class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"
+               placeholder="voce@email.com"/>
+      </div>
+      <div>
+        <label for="senha" class="block text-sm text-cafe-600 mb-1.5">Senha</label>
+        <input id="senha" type="password" name="senha" required autocomplete="current-password"
+               class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/>
+      </div>
+      <button type="submit" class="w-full bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-3.5 rounded-full font-medium shadow-sm transition">
+        Entrar
+      </button>
+    </form>
+
+    <div class="ornamento my-7 text-xs" aria-hidden="true"><span>✦</span></div>
+
+    <p class="text-sm text-cafe-500 text-center">
+      Ainda não tem conta?
+      <a href="/conta/cadastro{{with .Volta}}?volta={{.}}{{end}}" class="text-musgo-700 font-medium underline decoration-caramelo-400 underline-offset-4 hover:text-musgo-600">Crie a sua</a>
+    </p>
+  </div>
+</div>
+{{end}}

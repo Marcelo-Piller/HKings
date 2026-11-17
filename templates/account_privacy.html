@@ -1,0 +1,57 @@
+{{template "layout" .}}
+
+{{define "title"}}Privacidade — Livredo{{end}}
+
+{{define "content"}}
+<div class="max-w-3xl mx-auto px-4 pt-12">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Minha conta</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Privacidade e dados</h1>
+    <div class="ornamento max-w-xs mx-auto mt-6 text-lg" aria-hidden="true"><span>❦</span></div>
+  </header>
+
+  {{template "nav_conta" "privacidade"}}
+
+  {{with .Error}}<div class="mt-8 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{{.}}</div>{{end}}
+
+  <div class="mt-10 space-y-5">
+    <section class="rounded-2xl bg-white/75 border border-papel-300 p-6">
+      <h2 class="font-serif text-2xl text-musgo-950">Seus dados</h2>
+      <p class="text-sm text-cafe-600 mt-2 leading-relaxed">Baixe um arquivo com tudo o que guardamos sobre você: conta, pedidos e aceites dos termos (LGPD, art. 18). Para corrigir nome, telefone ou endereço, use <a href="/conta" class="text-musgo-800 underline">Meus dados</a>.</p>
+      <a href="/conta/privacidade/dados.json" class="mt-4 inline-flex items-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-5 py-2.5 rounded-full text-sm font-medium transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+        Baixar meus dados
+      </a>
+    </section>
+
+    <section class="rounded-2xl bg-white/75 border border-papel-300 p-6">
+      <h2 class="font-serif text-2xl text-musgo-950">Termos aceitos</h2>
+      <p class="text-sm text-cafe-600 mt-2">Leia: <a href="/termos" class="text-musgo-800 underline">Termos de Uso</a> · <a href="/privacidade" class="text-musgo-800 underline">Política de Privacidade</a> (versão de {{.VersaoLegivel}}).</p>
+      {{if .Aceites}}
+      <ul class="mt-3 text-sm text-cafe-700 divide-y divide-papel-200">
+        {{range .Aceites}}<li class="py-2 flex flex-wrap justify-between gap-2"><span>Versão {{.Version}} · {{.Origin}}</span><span class="text-cafe-500">{{data .AcceptedAt}}</span></li>{{end}}
+      </ul>
+      {{else}}<p class="text-sm text-cafe-500 mt-3">Nenhum aceite registrado.</p>{{end}}
+    </section>
+
+    <section class="rounded-2xl bg-white/75 border border-canela-200 p-6">
+      <h2 class="font-serif text-2xl text-canela-700">Excluir minha conta</h2>
+      <p class="text-sm text-cafe-600 mt-2 leading-relaxed">
+        Apagamos seu nome, e-mail, telefone, endereço, foto, senha e o vínculo com o Google, e você sai da conta. Os pedidos pagos continuam
+        guardados por 5 anos, sem ligação com a conta, porque a lei fiscal e o Código de Defesa do Consumidor exigem. Os e-books comprados
+        deixam de ficar disponíveis para download, então baixe-os antes. Esta ação não pode ser desfeita.
+      </p>
+      <form method="post" action="/conta/privacidade/excluir" class="mt-4 flex flex-wrap items-center gap-3">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+        <input name="confirmacao" placeholder="Digite EXCLUIR" autocomplete="off" required
+               class="w-44 bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-canela-500"/>
+        <button class="px-5 py-2.5 rounded-full border border-canela-600 text-canela-700 hover:bg-canela-50 text-sm font-medium transition">Excluir minha conta</button>
+      </form>
+    </section>
+
+    {{if .EmailDPO}}
+    <p class="text-sm text-cafe-500 text-center">Outros pedidos sobre seus dados: <a href="mailto:{{.EmailDPO}}" class="text-musgo-800 underline">{{.EmailDPO}}</a>{{with .Encarregado}} ({{.}}, encarregado de dados){{end}}. Respondemos em até 15 dias.</p>
+    {{end}}
+  </div>
+</div>
+{{end}}

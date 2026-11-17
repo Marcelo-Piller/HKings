@@ -1,0 +1,50 @@
+{{template "layout" .}}
+
+{{define "title"}}Meus pedidos — Livredo{{end}}
+
+{{define "content"}}
+<div class="max-w-3xl mx-auto px-4 pt-12">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Minha conta</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Meus pedidos</h1>
+    <div class="ornamento max-w-xs mx-auto mt-6 text-lg" aria-hidden="true"><span>❦</span></div>
+  </header>
+
+  {{template "nav_conta" "pedidos"}}
+
+  {{if not .Orders}}
+  <div class="text-center py-16">
+    <p class="font-serif text-3xl text-musgo-900">Nenhum pedido por aqui ainda.</p>
+    <p class="text-cafe-500 mt-2">Sua primeira história está a um clique.</p>
+    <a href="/#acervo" class="inline-block mt-8 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-7 py-3 rounded-full font-medium transition">Explorar o acervo</a>
+  </div>
+  {{else}}
+  <ul class="mt-10 space-y-4">
+    {{range .Orders}}
+    <li>
+      <a href="/pedido?id={{.ID}}" class="group flex items-center justify-between gap-4 rounded-2xl bg-white/75 border border-papel-300 px-6 py-5 hover:border-musgo-400 hover:shadow-[0_18px_30px_-24px_rgba(48,34,22,.6)] transition">
+        <div class="flex items-center gap-4 min-w-0">
+          <span class="shrink-0 w-11 h-11 rounded-full bg-camurca-100 text-musgo-700 grid place-items-center font-serif">{{.ID}}</span>
+          <div class="min-w-0">
+            <p class="font-serif text-lg text-cafe-900">Pedido nº {{.ID}}</p>
+            {{with .Resumo}}<p class="text-sm text-cafe-700 line-clamp-2" title="{{.}}">{{.}}</p>{{end}}
+            <p class="text-sm text-cafe-500">{{data .CreatedAt}}</p>
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="font-serif text-xl text-canela-600">{{.FormattedTotal}}</p>
+          {{if or (eq .Status "pago") (eq .Status "enviado") (eq .Status "entregue")}}
+          <span class="inline-block mt-1 text-[11px] tracking-[.15em] uppercase px-2.5 py-0.5 rounded-full bg-musgo-50 text-musgo-700 border border-musgo-200">{{.StatusLabel}}</span>
+          {{else if eq .Status "cancelado"}}
+          <span class="inline-block mt-1 text-[11px] tracking-[.15em] uppercase px-2.5 py-0.5 rounded-full bg-papel-200 text-cafe-500">{{.StatusLabel}}</span>
+          {{else}}
+          <span class="inline-block mt-1 text-[11px] tracking-[.15em] uppercase px-2.5 py-0.5 rounded-full bg-canela-50 text-canela-700 border border-canela-200">{{.StatusLabel}}</span>
+          {{end}}
+        </div>
+      </a>
+    </li>
+    {{end}}
+  </ul>
+  {{end}}
+</div>
+{{end}}

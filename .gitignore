@@ -1,0 +1,19 @@
+# Dados locais e segredos nunca devem ser versionados.
+loja.db
+loja.db-wal
+loja.db-shm
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+data/
+backups/
+
+# Imagens enviadas pelo painel são dados, não código.
+static/img/uploads/*
+!static/img/uploads/.gitkeep
+
+# Artefatos de compilação
+server
+*.exe

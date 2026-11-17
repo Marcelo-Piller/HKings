@@ -3,6 +3,49 @@
 {{define "admin_heading"}}Dashboard{{end}}
 
 {{define "admin_content"}}
+{{with .MPPendente}}
+<div class="mb-6 rounded-xl bg-caramelo-100 border border-caramelo-300 p-5 text-sm text-cafe-800">
+  <p class="font-semibold text-canela-800">Vendedores ainda não conseguem conectar o Mercado Pago</p>
+  <p class="mt-1">Falta preencher em <a href="/admin/configuracoes" class="underline font-medium">Configurações</a>:
+    {{range $i, $c := .}}{{if $i}}, {{end}}<strong>{{$c}}</strong>{{end}}.
+    É uma configuração única do site: depois dela, cada vendedor conecta a própria conta sozinho.</p>
+</div>
+{{end}}
+{{if .LGPDPendente}}
+<div class="mb-6 rounded-xl bg-caramelo-100 border border-caramelo-300 p-5 text-sm text-cafe-800">
+  <p class="font-semibold text-canela-800">Complete os dados da LGPD</p>
+  <p class="mt-1">Os <a href="/termos" class="underline">Termos</a> e a <a href="/privacidade" class="underline">Política de Privacidade</a> precisam
+    dizer quem é o responsável pelos dados e o e-mail do encarregado. Preencha em <a href="/admin/configuracoes#lgpd" class="underline font-medium">Configurações → LGPD</a>.</p>
+</div>
+{{end}}
+{{if or .Atrasados .Pausados}}
+<section id="envios" class="mb-6 rounded-xl bg-white border border-red-200 shadow p-5 text-sm">
+  <h2 class="font-semibold text-red-700">Envios com problema</h2>
+  {{with .Atrasados}}
+  <p class="mt-3 text-xs uppercase tracking-wide text-gray-500">Pedidos com prazo de postagem vencido</p>
+  <ul class="mt-1 divide-y divide-stone-100">
+    {{range .}}<li class="py-2 flex flex-wrap justify-between gap-2">
+      <a href="/admin/pedidos/detalhe?id={{.OrderID}}" class="text-indigo-600 hover:underline">Pedido nº {{.OrderID}}</a>
+      <span class="text-gray-600">{{.SellerName}}</span>
+      <span class="text-red-600">prazo {{.DeadlineLabel}}{{if .DaysLate}} · {{.DaysLate}} dia(s) útil(eis) de atraso{{end}}</span>
+    </li>{{end}}
+  </ul>
+  {{end}}
+  {{with .Pausados}}
+  <p class="mt-4 text-xs uppercase tracking-wide text-gray-500">Lojas pausadas por atraso</p>
+  <ul class="mt-1 divide-y divide-stone-100">
+    {{range .}}<li class="py-2 flex flex-wrap items-center justify-between gap-2">
+      <span><strong>{{.Name}}</strong> <span class="text-gray-500">— {{.Reason}}</span></span>
+      <form method="post" action="/admin/vendedores/reativar" onsubmit="return confirm('Reativar a loja? O histórico de atrasos recomeça do zero.')">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+        <input type="hidden" name="id" value="{{.ID}}"/>
+        <button class="px-3 py-1.5 rounded-lg border border-stone-300 hover:border-indigo-400 text-xs font-medium">Reativar loja</button>
+      </form>
+    </li>{{end}}
+  </ul>
+  {{end}}
+</section>
+{{end}}
 <!-- Stats -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
   <div class="bg-white rounded-xl shadow p-5">
@@ -11,7 +54,7 @@
   </div>
   <div class="bg-white rounded-xl shadow p-5">
     <p class="text-gray-500 text-sm">Receita Total</p>
-    <p class="text-3xl font-bold text-green-600 mt-1">R$ {{printf "%.2f" .TotalRevenue}}</p>
+    <p class="text-3xl font-bold text-green-600 mt-1">{{brl .TotalRevenue}}</p>
   </div>
   <div class="bg-white rounded-xl shadow p-5">
     <p class="text-gray-500 text-sm">Produtos Cadastrados</p>
@@ -41,7 +84,7 @@
         <tr class="hover:bg-gray-50">
           <td class="px-5 py-3 font-medium">#{{.ID}}</td>
           <td class="px-5 py-3">{{.CustomerName}}</td>
-          <td class="px-5 py-3 font-semibold">R$ {{printf "%.2f" .Total}}</td>
+          <td class="px-5 py-3 font-semibold">{{brl .Total}}</td>
           <td class="px-5 py-3">
             <span class="px-2 py-0.5 rounded-full text-xs font-medium
               {{if eq .Status "pendente"}}bg-yellow-100 text-yellow-700

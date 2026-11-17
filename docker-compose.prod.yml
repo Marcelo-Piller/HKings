@@ -1,0 +1,43 @@
+# Produção: a loja atrás do Caddy, com HTTPS automático em livredo.com.br.
+#
+# Complementa o docker-compose.yml (não o substitui):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Para não digitar os dois -f, coloque no .env do servidor:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+
+services:
+  loja:
+    environment:
+      # O Caddy sanitiza X-Forwarded-For; sem isso, todo cliente pareceria vir
+      # do IP do Caddy e o limite de tentativas de login bloquearia todo mundo
+      # junto.
+      TRUSTED_PROXY: "true"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificados emitidos: sem volume, cada recriação pediria um novo e
+      # esbarraria no limite de emissões do Let's Encrypt.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      loja:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy-data:
+  caddy-config:

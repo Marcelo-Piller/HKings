@@ -4,7 +4,9 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Projeto\\\\Site de vendas\" -Recurse -Depth 2)",
       "Bash(Select-Object FullName)",
       "PowerShell(head -50)",
-      "PowerShell(Get-ChildItem -Path \"c:\\\\Projeto\\\\Site de vendas\\\\templates\" -Recurse | ForEach-Object { $_.FullName })"
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Projeto\\\\Site de vendas\\\\templates\" -Recurse | ForEach-Object { $_.FullName })",
+      "Bash(go build *)",
+      "Bash(go version *)"
     ]
   }
 }

@@ -1,0 +1,67 @@
+{{template "layout" .}}
+
+{{define "title"}}{{.Author.Name}} — Livredo{{end}}
+
+{{define "content"}}
+{{$a := .Author}}
+<div class="max-w-6xl mx-auto px-4 pt-10 pb-6">
+  <nav class="text-sm text-cafe-500 flex items-center gap-2" aria-label="Você está em">
+    <a href="/" class="hover:text-musgo-700 transition">Acervo</a>
+    <span class="text-caramelo-500">/</span>
+    <span class="text-cafe-700 truncate">{{$a.Name}}</span>
+  </nav>
+
+  <header class="mt-8 grid gap-8 md:grid-cols-[220px_minmax(0,1fr)] items-start">
+    <div class="mx-auto md:mx-0">
+      {{if $a.PhotoURL}}
+      <img src="{{$a.PhotoURL}}" alt="Foto de {{$a.Name}}" class="w-44 h-44 md:w-52 md:h-52 rounded-full object-cover border-4 border-papel-50 shadow-[0_24px_40px_-24px_rgba(48,34,22,.7)]"/>
+      {{else}}
+      <div class="w-44 h-44 md:w-52 md:h-52 rounded-full bg-camurca-100 border-4 border-papel-50 grid place-items-center font-serif text-6xl text-musgo-800 shadow-[0_24px_40px_-24px_rgba(48,34,22,.7)]" aria-hidden="true">{{inicial $a.Name}}</div>
+      {{end}}
+    </div>
+    <div class="text-center md:text-left">
+      <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Autor(a)</p>
+      <h1 class="font-serif text-4xl md:text-5xl leading-[1.1] tracking-tight text-musgo-950 mt-3">{{$a.Name}}</h1>
+      <div class="ornamento max-w-[10rem] mt-5 mx-auto md:mx-0" aria-hidden="true"><span>❦</span></div>
+      {{if $a.Bio}}
+      <p class="mt-5 text-[17px] text-cafe-700 leading-[1.8] whitespace-pre-line max-w-2xl text-left">{{$a.Bio}}</p>
+      {{else}}
+      <p class="mt-5 text-cafe-500 italic">A biografia deste autor ainda não foi escrita.</p>
+      {{end}}
+      {{with $a.Website}}
+      <a href="{{.}}" target="_blank" rel="noopener nofollow ugc" class="mt-5 inline-flex items-center gap-1.5 text-musgo-800 font-medium border-b-2 border-caramelo-400 pb-0.5 hover:border-musgo-700 transition">Site do autor ↗</a>
+      {{end}}
+    </div>
+  </header>
+
+  <section class="mt-16">
+    <h2 class="font-serif text-3xl text-musgo-950 tracking-tight">Livros de {{$a.Name}} <span class="text-cafe-400 text-xl">· {{len $a.Books}}</span></h2>
+    {{if $a.Books}}
+    <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+      {{range $a.Books}}
+      <article class="livro group flex flex-col">
+        <a href="/produto?id={{.ID}}" class="block" tabindex="-1" aria-hidden="true">
+          <div class="livro-capa aspect-[2/3]">
+            {{template "capa" .}}
+            {{if .IsDigital}}
+            <span class="absolute top-3 right-3 bg-cafe-900/85 text-papel-50 text-[11px] tracking-wide uppercase px-2.5 py-1 rounded-full">E-book · {{.EbookTypeLabel}}</span>
+            {{else if eq .Stock 0}}
+            <span class="absolute top-3 right-3 bg-cafe-800/90 text-papel-50 text-[11px] tracking-wide uppercase px-2.5 py-1 rounded-full">Esgotado</span>
+            {{end}}
+          </div>
+        </a>
+        <div class="pt-4 px-0.5">
+          <p class="text-[11px] tracking-[.18em] uppercase text-musgo-600 font-medium">{{.Category}}</p>
+          <h3 class="font-serif text-[1.15rem] leading-snug text-cafe-900 mt-1.5 line-clamp-2"><a href="/produto?id={{.ID}}" class="hover:text-musgo-700 transition">{{.Name}}</a></h3>
+          <p class="text-xs text-cafe-500 mt-1 truncate">{{if .SoldBySite}}Vendido pelo <span class="text-musgo-700 font-medium">Livredo</span>{{else}}por {{.SellerLabel}}{{end}}</p>
+          <p class="font-serif text-xl text-canela-600 mt-2">{{.FormattedPrice}}</p>
+        </div>
+      </article>
+      {{end}}
+    </div>
+    {{else}}
+    <p class="mt-6 text-cafe-500">Nenhum livro deste autor à venda no momento.</p>
+    {{end}}
+  </section>
+</div>
+{{end}}

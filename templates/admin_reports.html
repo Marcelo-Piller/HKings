@@ -1,0 +1,93 @@
+{{template "admin_layout" .}}
+{{define "admin_heading"}}Denúncias{{end}}
+{{define "admin_content"}}
+<nav class="mb-5 flex flex-wrap gap-2 text-sm">
+  <a href="/admin/denuncias" class="px-4 py-1.5 rounded-full border {{if not .Filter}}bg-forest-800 text-white border-forest-800{{else}}bg-white border-stone-200 text-gray-600 hover:border-forest-500{{end}}">Todas</a>
+  {{range .Statuses}}
+  <a href="/admin/denuncias?status={{.Key}}" class="px-4 py-1.5 rounded-full border {{if eq .Key $.Filter}}bg-forest-800 text-white border-forest-800{{else}}bg-white border-stone-200 text-gray-600 hover:border-forest-500{{end}}">{{.Label}}</a>
+  {{end}}
+</nav>
+
+<p class="mb-5 text-xs text-gray-500 max-w-3xl">
+  Quem denunciou aparece apenas aqui, para o administrador. Suspender um vendedor bloqueia o painel dele e tira os livros dele da loja
+  na hora; reativar devolve tudo como estava.
+</p>
+
+<div class="space-y-4">
+  {{range .Reports}}
+  <article class="bg-white rounded-xl shadow border {{if eq .Status "aberta"}}border-canela-300{{else}}border-stone-100{{end}} p-5">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p class="text-xs text-gray-400">Denúncia #{{.ID}} · {{data .CreatedAt}}</p>
+        <p class="mt-1 font-semibold text-forest-900">{{.ReasonLabel}}</p>
+        <p class="mt-1 text-sm text-gray-600">
+          Contra <strong>{{if .SellerName}}{{.SellerName}}{{else}}vendedor #{{.SellerID}}{{end}}</strong>
+          {{if .SellerActive}}<span class="text-green-700">(ativo)</span>{{else}}<span class="text-red-700">(suspenso)</span>{{end}}
+          {{if .OrderID}}· <a href="/admin/pedidos/detalhe?id={{.OrderID}}" class="text-forest-700 underline">pedido nº {{.OrderID}}</a>{{end}}
+          {{if .ProductID}}· livro <a href="/produto?id={{.ProductID}}" target="_blank" class="text-forest-700 underline">{{.ProductName}}</a>
+          {{if .ProductActive}}<span class="text-green-700">(na loja)</span>{{else}}<span class="text-red-700">(fora da loja)</span>{{end}}{{end}}
+        </p>
+        <p class="text-xs text-gray-500 mt-0.5">Por {{.CustomerName}} &lt;{{.CustomerEmail}}&gt;</p>
+      </div>
+      <span class="text-xs font-semibold px-3 py-1 rounded-full
+        {{if eq .Status "aberta"}}bg-canela-100 text-canela-800{{else if eq .Status "em_analise"}}bg-caramelo-100 text-caramelo-800{{else if eq .Status "resolvida"}}bg-musgo-100 text-musgo-800{{else}}bg-gray-100 text-gray-600{{end}}">{{.StatusLabel}}</span>
+    </div>
+
+    <p class="mt-4 text-sm text-gray-800 whitespace-pre-line bg-papel-50 border border-papel-200 rounded-lg px-4 py-3">{{.Description}}</p>
+
+    <div class="mt-4 flex flex-col lg:flex-row gap-3 lg:items-end">
+      <form action="/admin/denuncias" method="post" class="flex-1 flex flex-col sm:flex-row gap-2 sm:items-end">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+        <input type="hidden" name="id" value="{{.ID}}"/>
+        <input type="hidden" name="filtro" value="{{$.Filter}}"/>
+        <label class="flex-1 text-xs text-gray-500">Anotação interna
+          <input name="nota" value="{{.AdminNote}}" maxlength="1000" placeholder="O que foi verificado, contato feito…"
+                 class="mt-1 w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-gray-800"/>
+        </label>
+        <label class="text-xs text-gray-500">Situação
+          <select name="status" class="mt-1 block border border-stone-200 rounded-lg px-3 py-2 text-sm text-gray-800">
+            {{$atual := .Status}}
+            {{range $.Statuses}}<option value="{{.Key}}" {{if eq .Key $atual}}selected{{end}}>{{.Label}}</option>{{end}}
+          </select>
+        </label>
+        <button class="bg-forest-800 hover:bg-forest-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Salvar</button>
+      </form>
+
+      {{if .ProductID}}
+      <form action="/admin/denuncias" method="post"
+            {{if .ProductActive}}onsubmit="return confirm('Tirar este livro da loja? Quem já comprou continua podendo baixar.')"{{end}}>
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+        <input type="hidden" name="livro" value="{{.ProductID}}"/>
+        <input type="hidden" name="filtro" value="{{$.Filter}}"/>
+        {{if .ProductActive}}
+        <input type="hidden" name="acao" value="tirar_livro"/>
+        <button class="w-full lg:w-auto border border-amber-300 text-amber-800 hover:bg-amber-50 px-4 py-2 rounded-lg text-sm font-medium">Tirar livro da loja</button>
+        {{else}}
+        <input type="hidden" name="acao" value="devolver_livro"/>
+        <button class="w-full lg:w-auto border border-green-300 text-green-700 hover:bg-green-50 px-4 py-2 rounded-lg text-sm font-medium">Devolver livro à loja</button>
+        {{end}}
+      </form>
+      {{end}}
+
+      {{if .SellerName}}
+      <form action="/admin/denuncias" method="post"
+            {{if .SellerActive}}onsubmit="return confirm('Suspender {{.SellerName}}? O painel dele fica bloqueado e os livros saem da loja.')"{{end}}>
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+        <input type="hidden" name="vendedor" value="{{.SellerID}}"/>
+        <input type="hidden" name="filtro" value="{{$.Filter}}"/>
+        {{if .SellerActive}}
+        <input type="hidden" name="acao" value="suspender"/>
+        <button class="w-full lg:w-auto border border-red-300 text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium">Suspender vendedor</button>
+        {{else}}
+        <input type="hidden" name="acao" value="reativar"/>
+        <button class="w-full lg:w-auto border border-green-300 text-green-700 hover:bg-green-50 px-4 py-2 rounded-lg text-sm font-medium">Reativar vendedor</button>
+        {{end}}
+      </form>
+      {{end}}
+    </div>
+  </article>
+  {{else}}
+  <div class="bg-white rounded-xl shadow border border-stone-100 px-5 py-12 text-center text-gray-400">Nenhuma denúncia {{if .Filter}}nesta situação{{else}}registrada{{end}}.</div>
+  {{end}}
+</div>
+{{end}}

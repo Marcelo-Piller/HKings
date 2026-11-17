@@ -1,0 +1,116 @@
+{{/*
+  Ícones dos painéis de admin e vendedor, no mesmo traço fino da loja.
+  Uso: {{template "icone" "estante"}} — a cor vem de currentColor.
+*/}}
+{{define "icone"}}
+<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{{if eq . "estante"}}
+  <!-- Estante: visão geral do acervo -->
+  <path d="M3 20.5h18"/>
+  <rect x="4.5" y="7" width="3.2" height="13.5" rx=".6"/>
+  <rect x="8.7" y="4" width="3.2" height="16.5" rx=".6"/>
+  <path d="M4.5 10h3.2M8.7 7h3.2"/>
+  <path d="M13.6 8.4l3-.8 3.4 12.6-3 .8z"/>
+{{else if eq . "livros"}}
+  <!-- Pilha de livros com marcador -->
+  <rect x="3" y="16" width="17.5" height="4.5" rx="1"/>
+  <rect x="5" y="11.5" width="14.5" height="4.5" rx="1"/>
+  <rect x="4" y="7" width="15" height="4.5" rx="1"/>
+  <path d="M14.5 7V3.5l1.6 1.1 1.6-1.1V7"/>
+{{else if eq . "ficha"}}
+  <!-- Ficha de pedido, como a de biblioteca -->
+  <rect x="4" y="3" width="16" height="18" rx="1.5"/>
+  <path d="M8.5 3v18"/>
+  <path d="M11.5 8h5.5M11.5 12h5.5M11.5 16h3.5"/>
+{{else if eq . "marcador"}}
+  <!-- Marcador de página: gêneros -->
+  <path d="M7 3h10v18l-5-3.8L7 21z"/>
+  <path d="M10 8h4"/>
+{{else if eq . "livreiro"}}
+  <!-- Fachada de sebo: vendedores -->
+  <path d="M4.5 10.5V20h15v-9.5"/>
+  <path d="M3 10l1.8-6h14.4L21 10"/>
+  <path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+  <path d="M10 20v-5h4v5"/>
+{{else if eq . "bandeira"}}
+  <!-- Denúncias -->
+  <path d="M5 21V3.5"/>
+  <path d="M5 4h12.5l-2.8 4.2 2.8 4.3H5"/>
+{{else if eq . "ajustes"}}
+  <!-- Configurações -->
+  <path d="M4 7h9.5M18.5 7H20M4 17h3.5M12.5 17H20"/>
+  <circle cx="16" cy="7" r="2.3"/>
+  <circle cx="10" cy="17" r="2.3"/>
+{{else if eq . "livro-aberto"}}
+  <!-- Ver a loja -->
+  <path d="M3 5.5h6a3 3 0 0 1 3 3V20a2 2 0 0 0-2-2H3z"/>
+  <path d="M21 5.5h-6a3 3 0 0 0-3 3V20a2 2 0 0 1 2-2h7z"/>
+{{else if eq . "porta"}}
+  <!-- Sair -->
+  <path d="M13.5 4H6v16h7.5"/>
+  <path d="M10 12h10M17 9l3 3-3 3"/>
+{{else if eq . "cartao"}}
+  <!-- Pagamentos -->
+  <rect x="3" y="5.5" width="18" height="13" rx="2"/>
+  <path d="M3 9.5h18M7 14.5h3.5"/>
+{{else if eq . "divisao"}}
+  <!-- Divisão automática: balança -->
+  <path d="M12 4v16M7.5 20h9M5 7h14"/>
+  <path d="M5 7l-2.5 6a2.5 2.5 0 0 0 5 0zM19 7l-2.5 6a2.5 2.5 0 0 0 5 0z"/>
+{{else if eq . "carta"}}
+  <!-- E-mail: carta com lacre -->
+  <rect x="3" y="5.5" width="18" height="13" rx="1.5"/>
+  <path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>
+  <circle cx="12" cy="14.5" r="2" fill="#CC9A52" stroke="none"/>
+{{else if eq . "celular"}}
+  <!-- WhatsApp -->
+  <rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/>
+  <path d="M10.5 18.5h3"/>
+{{else if eq . "confere"}}
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M8 12.3l2.7 2.7L16 9.5"/>
+{{else if eq . "alerta"}}
+  <path d="M12 3.5l9.5 16.5h-19z"/>
+  <path d="M12 10v4.5M12 17.2v.3"/>
+{{else if eq . "cadeado"}}
+  <rect x="5" y="10.5" width="14" height="10" rx="2"/>
+  <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3M12 14.5v2"/>
+{{else if eq . "guia"}}
+  <!-- Passo a passo: caderno com marcador -->
+  <path d="M5 3.5h12a2 2 0 0 1 2 2v15H7a2 2 0 0 1-2-2z"/>
+  <path d="M5 18.5a2 2 0 0 1 2-2h12M9 8h6M9 11.5h4"/>
+{{else if eq . "camera"}}
+  <path d="M4 8h3.2l1.8-2.8h6l1.8 2.8H20v11H4z"/>
+  <circle cx="12" cy="13.3" r="3.4"/>
+{{else if eq . "recorte"}}
+  <circle cx="6.5" cy="17.5" r="2.5"/>
+  <circle cx="17.5" cy="17.5" r="2.5"/>
+  <path d="M8.3 15.8L18 4M15.7 15.8L6 4"/>
+{{else if eq . "chave"}}
+  <!-- Login: chave antiga -->
+  <circle cx="7.5" cy="12" r="4"/>
+  <circle cx="7.5" cy="12" r="1.3"/>
+  <path d="M11.5 12H21M17.5 12v3M20.5 12v2.2"/>
+{{else if eq . "retrato"}}
+  <!-- Página de autor: retrato em moldura -->
+  <rect x="4" y="3" width="16" height="18" rx="2"/>
+  <circle cx="12" cy="10" r="3"/>
+  <path d="M7.5 18c.8-2.3 2.5-3.5 4.5-3.5s3.7 1.2 4.5 3.5"/>
+{{else if eq . "pena"}}
+  <!-- Autores e e-books: pena de escrever -->
+  <path d="M20 4c-6 1-11 5-13.5 11.5L5 20l4.5-1.5C16 16 19.5 11 20 4z"/>
+  <path d="M5 20l7-7M14 7.5l2.5 2.5"/>
+{{else if eq . "caixa"}}
+  <!-- Envio: caixa de papelão -->
+  <path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/>
+  <path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/>
+{{else if eq . "externo"}}
+  <path d="M9 5H5v14h14v-4M13 4h7v7M20 4l-9 9"/>
+{{else if eq . "marca"}}
+  <!-- Marca: livro aberto com folha -->
+  <path d="M3.5 7h5.5a3 3 0 0 1 3 3v10a2.5 2.5 0 0 0-2.5-2.5h-6z"/>
+  <path d="M20.5 7H15a3 3 0 0 0-3 3v10a2.5 2.5 0 0 1 2.5-2.5h6z"/>
+  <path d="M12 9c0-3 1.8-5.3 4.8-5.8-.5 3-2.3 5-4.8 5.8z" fill="#CC9A52" stroke="none"/>
+{{end}}
+</svg>
+{{end}}

@@ -1,39 +1,421 @@
 {{template "layout" .}}
 
-{{define "title"}}{{.Product.Name}} - MinhaLoja{{end}}
+{{define "title"}}{{.Product.Name}} — Livredo{{end}}
 
 {{define "content"}}
-<div class="max-w-5xl mx-auto px-4 py-10">
-  <a href="/" class="text-forest-600 text-sm hover:underline font-medium">← Voltar para a loja</a>
+<div class="max-w-6xl mx-auto px-4 pt-10 pb-6">
+  <nav class="text-sm text-cafe-500 flex items-center gap-2" aria-label="Você está em">
+    <a href="/" class="hover:text-musgo-700 transition">Acervo</a>
+    <span class="text-caramelo-500">/</span>
+    <a href="/?categoria={{.Product.Category}}#acervo" class="hover:text-musgo-700 transition">{{.Product.Category}}</a>
+    <span class="text-caramelo-500">/</span>
+    <span class="text-cafe-700 truncate">{{.Product.Name}}</span>
+  </nav>
 
-  <div class="mt-6 bg-white rounded-2xl shadow p-6 md:p-8 grid md:grid-cols-2 gap-8 border border-stone-100 items-start">
-    <div class="bg-stone-100 rounded-xl overflow-hidden">
-      <img src="{{.Product.ImageURL}}" alt="{{.Product.Name}}"
-           class="w-full h-auto block"
-           onerror="this.src='/static/img/placeholder.svg'"/>
+  <div class="mt-10 grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] gap-12 lg:gap-20 items-start">
+
+    <!-- Capa -->
+    <div class="relative isolate surgir">
+      <div class="pointer-events-none absolute -inset-4 sm:-inset-8 rounded-[2rem] sm:rounded-[3rem] bg-camurca-100 -z-10"></div>
+      <div class="pointer-events-none absolute -bottom-6 right-0 sm:-right-6 w-40 h-40 rounded-full bg-caramelo-200/50 blur-2xl -z-10"></div>
+      <div class="livro max-w-sm mx-auto">
+        <div class="livro-capa livro-destaque aspect-[2/3]">
+          {{template "capa" .Product}}
+        </div>
+      </div>
     </div>
 
-    <div class="flex flex-col justify-start">
-      <span class="text-sm text-forest-600 font-semibold uppercase tracking-wide">{{.Product.Category}}</span>
-      <h1 class="text-3xl font-bold text-gray-900 mt-1">{{.Product.Name}}</h1>
-      <p class="text-3xl font-bold text-shell-600 mt-3">{{.Product.FormattedPrice}}</p>
-      <p class="text-gray-600 mt-4 leading-relaxed">{{.Product.Description}}</p>
+    <!-- Detalhes -->
+    <div class="surgir" style="animation-delay:.1s">
+      <div class="flex flex-wrap items-center gap-3">
+        <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium">
+          <span class="text-caramelo-500">✦</span> {{.Product.Category}}
+        </p>
+        {{if .Product.IsDigital}}
+        <span class="inline-flex items-center gap-1.5 text-[11px] tracking-[.15em] uppercase px-3 py-1 rounded-full bg-cafe-800 text-papel-50">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>
+          E-book · {{.Product.EbookTypeLabel}}
+        </span>
+        {{with .Direitos}}{{with .BadgeLabel}}
+        <span class="inline-flex items-center gap-1.5 text-[11px] tracking-[.12em] uppercase px-3 py-1 rounded-full bg-musgo-50 text-musgo-800 border border-musgo-200" title="Vendedor verificado pela loja: só publica obras com direitos de venda">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+          {{.}}
+        </span>
+        {{end}}{{end}}
+        {{else if eq .Product.Condition "usado"}}
+        <span class="text-[11px] tracking-[.15em] uppercase px-3 py-1 rounded-full bg-canela-50 text-canela-700 border border-canela-200">Usado</span>
+        {{else if eq .Product.Condition "novo"}}
+        <span class="text-[11px] tracking-[.15em] uppercase px-3 py-1 rounded-full bg-musgo-50 text-musgo-700 border border-musgo-200">Novo</span>
+        {{end}}
+      </div>
+      <h1 class="font-serif text-4xl md:text-5xl leading-[1.1] tracking-tight text-musgo-950 mt-4">{{.Product.Name}}</h1>
+      {{with .Product.Author}}
+      <p class="mt-3 text-lg text-cafe-600 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span>de <a href="{{$.Product.AuthorURL}}" class="font-serif italic text-cafe-800 border-b border-caramelo-300 hover:text-musgo-700 hover:border-musgo-600 transition" title="Sobre o autor e outros livros">{{.}}</a></span>
+        <a href="{{$.Product.AuthorURL}}" class="text-sm text-musgo-700 font-medium hover:text-musgo-900 transition whitespace-nowrap">Sobre o autor →</a>
+      </p>
+      {{end}}
 
-      {{if gt .Product.Stock 0}}
-        <p class="text-forest-600 text-sm mt-2 font-medium">✅ Em estoque ({{.Product.Stock}} unidades)</p>
-        <form action="/carrinho/add" method="post" class="mt-6 flex items-center gap-3">
-          <input type="hidden" name="id" value="{{.Product.ID}}"/>
-          <label class="text-sm font-medium text-gray-700">Qtd:</label>
-          <input type="number" name="qty" value="1" min="1" max="{{.Product.Stock}}"
-                 class="w-20 border border-gray-300 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-shell-400"/>
-          <button class="flex-1 bg-shell-500 text-white py-3 rounded-xl font-semibold hover:bg-shell-600 transition">
-            🛒 Adicionar ao Carrinho
+      <div class="ornamento max-w-[10rem] mt-6" aria-hidden="true"><span>❦</span></div>
+
+      <p class="font-serif text-4xl text-canela-600 mt-6">{{.Product.FormattedPrice}}</p>
+      {{with .Parcelas}}
+      <p class="mt-2 text-cafe-600">
+        ou <strong class="font-medium text-cafe-800">{{.Installments}}x de {{brl .Amount}}</strong> no cartão
+        {{if .InterestFree}}<span class="text-musgo-700">sem juros</span>
+        {{else}}<span class="text-cafe-400 text-sm">(com juros · total {{brl .Total}})</span>{{end}}
+      </p>
+      {{end}}
+
+      {{if .Product.Description}}
+      <div class="mt-8">
+        <h2 class="text-[12px] tracking-[.2em] uppercase text-cafe-500 mb-3">Sinopse</h2>
+        <p class="capitular text-[17px] text-cafe-700 leading-[1.8] whitespace-pre-line">{{.Product.Description}}</p>
+      </div>
+      {{end}}
+      {{if or .Product.Publisher .Product.Language .Product.ISBN}}
+      <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-5 gap-y-1.5 text-sm">
+        {{with .Product.Publisher}}<dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500 pt-0.5">Editora</dt><dd class="text-cafe-800">{{.}}</dd>{{end}}
+        {{with .Product.Language}}<dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500 pt-0.5">Idioma</dt><dd class="text-cafe-800">{{.}}</dd>{{end}}
+        {{with .Product.ISBN}}<dt class="text-[11px] tracking-[.18em] uppercase text-cafe-500 pt-0.5">ISBN</dt><dd class="text-cafe-800 font-mono text-[13px]">{{.}}</dd>{{end}}
+      </dl>
+      {{end}}
+
+      <!-- Quem vende -->
+      <div class="mt-10 flex items-center gap-4 rounded-2xl border border-papel-300 bg-papel-50 px-5 py-4">
+        {{if .Product.SoldBySite}}
+        <span class="w-11 h-11 rounded-2xl bg-musgo-800 grid place-items-center shrink-0">
+          <svg viewBox="0 0 64 64" class="w-7 h-7" aria-hidden="true">
+            <path d="M12 20h12a8 8 0 0 1 8 8v22a6 6 0 0 0-6-6H12z" fill="none" stroke="#FCF8F1" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="M52 20H40a8 8 0 0 0-8 8v22a6 6 0 0 1 6-6h14z" fill="none" stroke="#FCF8F1" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="M32 26c0-7 4-12 11-13-1 7-5 11-11 13z" fill="#CC9A52"/>
+          </svg>
+        </span>
+        <div>
+          <p class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Vendido por</p>
+          <p class="font-serif text-lg text-musgo-900 leading-tight">Livre<em class="italic text-musgo-600">do</em></p>
+          <p class="text-xs text-cafe-500 mt-0.5">Vendido pelo próprio site</p>
+        </div>
+        {{else}}
+        {{template "avatar" dict "URL" .SellerAvatar "Nome" .Product.SellerLabel "Tam" "w-14 h-14 self-start" "Texto" "text-2xl"}}
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Vendido por</p>
+          <p class="font-serif text-lg text-cafe-900 leading-tight truncate">{{.Product.SellerLabel}}</p>
+          {{with .Product.SellerKind}}
+          <span class="inline-block mt-1 text-[11px] tracking-[.12em] uppercase px-2.5 py-0.5 rounded-full {{if eq . "Loja"}}bg-musgo-50 text-musgo-700 border border-musgo-200{{else}}bg-canela-50 text-canela-700 border border-canela-200{{end}}">{{.}}</span>
+          {{end}}
+          {{with .SellerRating}}<div class="mt-2">{{template "reputacao" .}}</div>{{end}}
+          {{if .EnvioRapido}}<p class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-musgo-50 text-musgo-800 border border-musgo-200" title="Posta a maioria dos pedidos no mesmo dia do pagamento">⚡ Envio Rápido</p>
+          {{else if .PrazoPostagem}}<p class="mt-2 text-xs text-cafe-500">Posta em até {{.PrazoPostagem}} dias úteis após o pagamento</p>{{end}}
+          {{if .VendedorEhAutor}}
+          <a href="{{.Product.AuthorURL}}" class="mt-3 flex items-center gap-2.5 rounded-xl bg-musgo-50 border border-musgo-200 px-3.5 py-2.5 text-sm text-musgo-800 hover:bg-musgo-100 hover:border-musgo-300 transition">
+            <svg class="w-5 h-5 shrink-0 text-musgo-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4c-6 1-11 5-13.5 11.5L5 20l4.5-1.5C16 16 19.5 11 20 4z"/><path d="M5 20l7-7M14 7.5l2.5 2.5"/></svg>
+            <span class="min-w-0"><span class="block font-medium">Vendido pelo próprio autor</span><span class="block text-xs text-musgo-700/80">Conheça a página do autor e outros livros</span></span>
+            <span class="ml-auto" aria-hidden="true">→</span>
+          </a>
+          {{end}}
+          <a href="/denunciar?vendedor={{.Product.SellerID}}&livro={{.Product.ID}}" class="mt-2 inline-flex items-center gap-1 text-xs text-cafe-400 hover:text-canela-700 transition">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>
+            Denunciar vendedor
+          </a>
+        </div>
+        {{end}}
+      </div>
+
+      <div class="mt-4 rounded-2xl bg-white/70 border border-papel-300 p-6">
+        {{if not .Product.SellerReady}}
+        <p class="flex items-center gap-2 text-sm text-canela-700">
+          <span class="w-2 h-2 rounded-full bg-canela-500"></span>
+          Este vendedor ainda não está recebendo pagamentos
+        </p>
+        <a href="/?categoria={{.Product.Category}}#acervo"
+           class="mt-5 inline-flex items-center gap-2 text-musgo-800 font-medium border-b-2 border-caramelo-400 pb-0.5 hover:border-musgo-700 transition">
+          Ver outros livros de {{.Product.Category}}
+        </a>
+        {{else if .Product.IsDigital}}
+        {{if or .OwnsEbook .OwnsAudio}}
+        <p class="flex items-center gap-2 text-sm text-musgo-700">
+          <span class="w-2 h-2 rounded-full bg-musgo-500"></span>
+          Na sua biblioteca: {{if and .OwnsEbook .OwnsAudio}}e-book e audiobook{{else if .OwnsAudio}}audiobook{{else}}e-book{{end}}
+        </p>
+        <div class="mt-4 flex flex-wrap gap-3">
+          {{if .OwnsEbook}}
+          <a href="/conta/biblioteca/baixar?livro={{.Product.ID}}"
+             class="flex-1 inline-flex items-center justify-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-3.5 px-6 rounded-full font-medium shadow-sm transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+            Baixar {{.Product.EbookTypeLabel}}
+          </a>
+          {{end}}
+          {{if .OwnsAudio}}
+          <a href="/conta/biblioteca/ouvir?livro={{.Product.ID}}"
+             class="flex-1 inline-flex items-center justify-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-3.5 px-6 rounded-full font-medium shadow-sm transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>
+            Ouvir audiobook
+          </a>
+          {{end}}
+        </div>
+        {{end}}
+        {{with .Edicoes}}
+        <form action="/carrinho/add" method="post" class="{{if or $.OwnsEbook $.OwnsAudio}}mt-6 pt-5 border-t border-papel-300{{end}}">
+          <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+          <input type="hidden" name="id" value="{{$.Product.ID}}"/>
+          <input type="hidden" name="qty" value="1"/>
+          {{if gt (len .) 1}}
+          <fieldset class="space-y-2.5">
+            <legend class="text-[11px] tracking-[.18em] uppercase text-cafe-500 mb-2">{{if or $.OwnsEbook $.OwnsAudio}}Complete sua biblioteca{{else}}Escolha a edição{{end}}</legend>
+            {{range $i, $e := .}}
+            <label class="flex items-center gap-3 rounded-xl border border-papel-300 bg-white/60 px-4 py-3 cursor-pointer hover:border-musgo-500 has-[:checked]:border-musgo-700 has-[:checked]:bg-musgo-50/60 transition">
+              <input type="radio" name="edicao" value="{{$e.Value}}" {{if eq $i 0}}checked{{end}} class="accent-[#1F5C3C] w-4 h-4"/>
+              <span class="flex-1 min-w-0">
+                <span class="block font-medium text-cafe-900">{{$e.Label}}</span>
+                <span class="block text-xs text-cafe-500">{{$e.Desc}}</span>
+              </span>
+              <span class="font-serif text-lg text-canela-600 whitespace-nowrap">{{brl $e.Price}}</span>
+            </label>
+            {{end}}
+          </fieldset>
+          {{else}}
+          {{range .}}
+          <input type="hidden" name="edicao" value="{{.Value}}"/>
+          <p class="flex items-center gap-2 text-sm text-musgo-700"><span class="w-2 h-2 rounded-full bg-musgo-500"></span>{{.Desc}}</p>
+          {{end}}
+          {{end}}
+          {{if $.Amostra}}<a href="#amostra" class="mt-3 inline-flex items-center gap-1.5 text-sm text-musgo-800 font-medium border-b border-caramelo-400 hover:border-musgo-700 transition">Ler a amostra grátis ↓</a>{{end}}
+          {{if $.AmostraAudio}}<a href="#amostra-audio" class="mt-3 ml-3 inline-flex items-center gap-1.5 text-sm text-musgo-800 font-medium border-b border-caramelo-400 hover:border-musgo-700 transition">Ouvir um trecho ↓</a>{{end}}
+          <button class="mt-5 w-full inline-flex items-center justify-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-3.5 rounded-full font-medium shadow-sm transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            {{if gt (len .) 1}}Comprar{{else}}Comprar {{(index . 0).Short}}{{end}}
           </button>
         </form>
-      {{else}}
-        <p class="text-red-500 text-sm mt-4 font-medium">❌ Produto fora de estoque</p>
-      {{end}}
+        {{end}}
+        {{else if gt .Product.Stock 0}}
+        <p class="flex items-center gap-2 text-sm text-musgo-700">
+          <span class="w-2 h-2 rounded-full bg-musgo-500"></span>
+          {{if le .Product.Stock 3}}Últimos {{.Product.Stock}} exemplares disponíveis{{else}}Disponível · {{.Product.Stock}} exemplares{{end}}
+        </p>
+        <form action="/carrinho/add" method="post" class="mt-5 flex items-stretch gap-3">
+          <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+          <input type="hidden" name="id" value="{{.Product.ID}}"/>
+          <label class="sr-only" for="qtd">Quantidade</label>
+          <input id="qtd" type="number" name="qty" value="1" min="1" max="{{.Product.Stock}}"
+                 class="w-20 bg-papel-50 border border-papel-300 rounded-full px-3 text-center font-medium focus:outline-none focus:border-musgo-500"/>
+          <button class="flex-1 inline-flex items-center justify-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-3.5 rounded-full font-medium shadow-sm transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            Colocar na sacola
+          </button>
+        </form>
+        {{else}}
+        <p class="flex items-center gap-2 text-sm text-canela-700">
+          <span class="w-2 h-2 rounded-full bg-canela-500"></span>
+          Esgotado no momento
+        </p>
+        <a href="/?categoria={{.Product.Category}}#acervo"
+           class="mt-5 inline-flex items-center gap-2 text-musgo-800 font-medium border-b-2 border-caramelo-400 pb-0.5 hover:border-musgo-700 transition">
+          Ver outros livros de {{.Product.Category}}
+        </a>
+        {{end}}
+
+
+        {{if and .Product.SellerReady (not .Product.IsDigital) (gt .Product.Stock 0)}}
+        <!-- Frete antes de comprar: cota um exemplar até o CEP informado -->
+        <div class="mt-6 pt-5 border-t border-papel-300" data-frete="{{.Product.ID}}">
+          <p class="text-[12px] tracking-[.18em] uppercase text-cafe-500 mb-2.5">Calcular frete e prazo</p>
+          <div class="flex items-stretch gap-2">
+            <label class="sr-only" for="frete-cep">CEP de entrega</label>
+            <input id="frete-cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="Seu CEP"
+                   class="w-36 bg-papel-50 border border-papel-300 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-musgo-500 focus:bg-white transition"/>
+            <button type="button" id="frete-calcular"
+                    class="px-5 py-2.5 rounded-full border border-musgo-700 text-musgo-800 hover:bg-musgo-50 text-sm font-medium transition">Calcular</button>
+            <a href="https://buscacepinter.correios.com.br/app/endereco/" target="_blank" rel="noopener"
+               class="self-center text-xs text-cafe-400 hover:text-musgo-700 underline decoration-papel-400 underline-offset-2">Não sei meu CEP</a>
+          </div>
+          <div id="frete-resultado" class="hidden mt-3 text-sm"></div>
+        </div>
+        {{end}}
+
+        <div class="mt-6 pt-5 border-t border-papel-300 grid sm:grid-cols-2 gap-4 text-sm text-cafe-600">
+          <p class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-caramelo-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            Pagamento seguro com PIX ou cartão
+          </p>
+          <p class="flex items-start gap-2.5">
+            {{if .Product.IsDigital}}
+            <svg class="w-5 h-5 text-caramelo-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5h6a3 3 0 0 1 3 3V20a2 2 0 0 0-2-2H3z"/><path d="M21 5.5h-6a3 3 0 0 0-3 3V20a2 2 0 0 1 2-2h7z"/></svg>
+            Fica na sua biblioteca para baixar quando quiser
+            {{else}}
+            <svg class="w-5 h-5 text-caramelo-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>
+            <span>Envio feito {{if .Product.SoldBySite}}pelo próprio Livredo{{else}}pelo vendedor, <strong class="font-medium text-cafe-700">{{.Product.SellerLabel}}</strong>{{end}}, com rastreio.</span>
+            {{end}}
+          </p>
+        </div>
+      </div>
+
+      <a href="/#acervo" class="inline-flex items-center gap-2 text-sm text-cafe-500 hover:text-musgo-700 mt-8 transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 19l-7-7 7-7"/></svg>
+        Voltar ao acervo
+      </a>
     </div>
   </div>
 </div>
+{{if .Product.HasAudio}}
+<section id="amostra-audio" class="max-w-3xl mx-auto px-4 pt-6 pb-4 scroll-mt-24">
+  <div class="rounded-2xl bg-white/75 border border-papel-300 p-6">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h2 class="font-serif text-2xl text-musgo-950">Audiobook</h2>
+      <p class="text-sm text-cafe-500">{{with .Product.AudioDurationLabel}}{{.}} · {{end}}{{.Product.AudioTracks}} faixa(s)</p>
+    </div>
+    {{with .AmostraAudio}}
+    <p class="text-sm text-cafe-600 mt-3">Ouça os primeiros minutos:</p>
+    <audio controls preload="none" src="{{.}}" class="mt-2 w-full"></audio>
+    {{end}}
+    {{with .Faixas}}
+    <details class="mt-4 text-sm text-cafe-700">
+      <summary class="cursor-pointer text-musgo-800 font-medium">Ver as faixas</summary>
+      <ol class="mt-2 divide-y divide-papel-200">
+        {{range .}}<li class="py-1.5 flex justify-between gap-3"><span class="truncate">{{.Position}}. {{.Title}}</span><span class="text-cafe-400 whitespace-nowrap">{{.DurationLabel}}</span></li>{{end}}
+      </ol>
+    </details>
+    {{end}}
+  </div>
+</section>
+{{end}}
+{{with .Amostra}}
+<section id="amostra" class="max-w-3xl mx-auto px-4 pt-6 pb-4 scroll-mt-24">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Amostra grátis</p>
+    <h2 class="font-serif text-3xl md:text-4xl text-musgo-950 mt-2 tracking-tight">Leia antes de comprar</h2>
+    <p class="text-sm text-cafe-500 mt-2">{{.Rotulo}} de {{.Total}}{{if eq .Tipo "epub"}} · páginas aproximadas{{end}}</p>
+  </header>
+  {{if .Imagens}}
+  <div class="mt-8 space-y-6">
+    {{range .Imagens}}
+    <img src="{{.URL}}" alt="Página {{.N}} da amostra" loading="lazy"
+         class="block mx-auto w-full max-w-[620px] h-auto rounded-lg bg-white border border-papel-300 shadow-[0_18px_30px_-24px_rgba(48,34,22,.55)]"/>
+    {{end}}
+  </div>
+  {{else if .URL}}
+  <div id="amostra-pdf" data-url="{{.URL}}" class="mt-8 space-y-6">
+    <p class="text-center text-cafe-500 text-sm" data-carregando>Carregando as páginas…</p>
+  </div>
+  <noscript><p class="text-center mt-6"><a href="{{.URL}}" class="text-musgo-800 underline">Abrir a amostra em PDF</a></p></noscript>
+  {{else}}
+  <div class="mt-8 space-y-6">
+    {{range .Paginas}}
+    <article class="relative rounded-xl bg-[#fffdf8] border border-papel-300 shadow-[0_18px_30px_-24px_rgba(48,34,22,.55)] px-6 sm:px-12 py-10 font-serif text-[17px] leading-[1.75] text-cafe-900">
+      {{range .Blocks}}
+      {{if .Heading}}<h3 class="text-2xl text-musgo-950 text-center my-4 leading-snug">{{.Text}}</h3>{{else}}<p class="indent-6 mb-2 text-justify hyphens-auto" lang="pt-BR">{{.Text}}</p>{{end}}
+      {{end}}
+      <span class="absolute bottom-3 inset-x-0 text-center text-xs text-cafe-400 font-sans">{{.Number}}</span>
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+  <p class="text-center text-sm text-cafe-500 mt-8">Gostou? <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false" class="text-musgo-800 font-medium underline decoration-caramelo-400 underline-offset-4">Compre o livro completo</a></p>
+</section>
+{{if .URL}}
+<script src="/static/js/pdfjs/pdf.min.js"></script>
+<script>
+(function () {
+  var box = document.getElementById('amostra-pdf');
+  if (!box || !window.pdfjsLib) return;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/static/js/pdfjs/pdf.worker.min.js';
+  var falha = function () {
+    box.innerHTML = '<p class="text-center text-cafe-500 text-sm">Não foi possível mostrar a amostra aqui. <a class="underline text-musgo-800" href="' + box.dataset.url + '">Abrir em PDF</a></p>';
+  };
+  pdfjsLib.getDocument({ url: box.dataset.url, isEvalSupported: false }).promise.then(function (pdf) {
+    box.querySelector('[data-carregando]').remove();
+    var chain = Promise.resolve();
+    for (var i = 1; i <= pdf.numPages; i++) {
+      (function (n) {
+        chain = chain.then(function () {
+          return pdf.getPage(n).then(function (page) {
+            var largura = Math.min(box.clientWidth, 620);
+            var base = page.getViewport({ scale: 1 });
+            var escala = largura / base.width;
+            var dpr = window.devicePixelRatio || 1;
+            var vp = page.getViewport({ scale: escala * dpr });
+            var canvas = document.createElement('canvas');
+            canvas.width = vp.width; canvas.height = vp.height;
+            canvas.style.width = '100%'; canvas.style.height = 'auto';
+            canvas.className = 'block mx-auto rounded-lg bg-white border border-papel-300 shadow-[0_18px_30px_-24px_rgba(48,34,22,.55)]';
+            canvas.style.maxWidth = '620px';
+            canvas.setAttribute('aria-label', 'Página ' + n + ' da amostra');
+            box.appendChild(canvas);
+            return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+          });
+        });
+      })(i);
+    }
+    return chain;
+  }).catch(falha);
+})();
+</script>
+{{end}}
+{{end}}
+{{if and .Product.SellerReady (not .Product.IsDigital) (gt .Product.Stock 0)}}
+<script>
+(function () {
+  var bloco = document.querySelector('[data-frete]');
+  if (!bloco) return;
+  var livro = bloco.getAttribute('data-frete');
+  var cep = document.getElementById('frete-cep');
+  var botao = document.getElementById('frete-calcular');
+  var saida = document.getElementById('frete-resultado');
+
+  function aviso(texto, erro) {
+    saida.className = 'mt-3 text-sm rounded-xl px-4 py-3 ' +
+      (erro ? 'bg-canela-50 border border-canela-200 text-canela-800' : 'bg-camurca-100 border border-camurca-200 text-musgo-800');
+    saida.textContent = texto;
+  }
+
+  function mostrar(d) {
+    if (d.combinado) { aviso('O frete deste livro é combinado com quem vende, depois da compra.', false); return; }
+    if (d.erro || !d.opcoes || !d.opcoes.length) { aviso(d.erro || 'Nenhuma entrega disponível para esse CEP.', true); return; }
+    saida.className = 'mt-3 text-sm';
+    saida.textContent = '';
+    var lista = document.createElement('ul');
+    lista.className = 'divide-y divide-papel-300 rounded-xl border border-papel-300 bg-papel-50 overflow-hidden';
+    d.opcoes.forEach(function (o) {
+      var li = document.createElement('li');
+      li.className = 'flex items-baseline justify-between gap-3 px-4 py-2.5';
+      var nome = document.createElement('span');
+      nome.className = 'text-cafe-800';
+      nome.textContent = o.nome;
+      if (o.prazo) {
+        var prazo = document.createElement('span');
+        prazo.className = 'block text-xs text-cafe-500';
+        prazo.textContent = 'até ' + o.prazo + ' dias úteis após a postagem';
+        nome.appendChild(prazo);
+      }
+      var preco = document.createElement('span');
+      preco.className = 'font-medium text-cafe-900 whitespace-nowrap';
+      preco.textContent = o.preco;
+      li.appendChild(nome); li.appendChild(preco);
+      lista.appendChild(li);
+    });
+    saida.appendChild(lista);
+    var nota = document.createElement('p');
+    nota.className = 'text-xs text-cafe-400 mt-2';
+    nota.textContent = 'Para ' + d.cep + (d.endereco && d.endereco.cidade ? ' · ' + d.endereco.cidade + '/' + d.endereco.uf : '') +
+      '. Você escolhe a entrega no checkout.';
+    saida.appendChild(nota);
+  }
+
+  function calcular() {
+    var digitos = (cep.value || '').replace(/\D/g, '');
+    saida.classList.remove('hidden');
+    if (digitos.length !== 8) { aviso('Informe um CEP com 8 dígitos.', true); return; }
+    botao.disabled = true; botao.textContent = 'Calculando…';
+    fetch('/frete/cotar?livro=' + livro + '&cep=' + digitos, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(mostrar)
+      .catch(function () { aviso('Não foi possível calcular o frete agora. Tente de novo.', true); })
+      .then(function () { botao.disabled = false; botao.textContent = 'Calcular'; });
+  }
+
+  botao.addEventListener('click', calcular);
+  cep.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calcular(); } });
+})();
+</script>
+{{end}}
 {{end}}

@@ -1,80 +1,110 @@
 {{template "layout" .}}
 
-{{define "title"}}Carrinho - MinhaLoja{{end}}
+{{define "title"}}Sua sacola — Livredo{{end}}
 
 {{define "content"}}
-<div class="max-w-4xl mx-auto px-4 py-10">
-  <h1 class="text-3xl font-bold text-gray-800 mb-6">🛒 Seu Carrinho</h1>
+<div class="max-w-6xl mx-auto px-4 pt-12">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Sua seleção</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Sua sacola</h1>
+    <div class="ornamento max-w-xs mx-auto mt-6 text-lg" aria-hidden="true"><span>❦</span></div>
+    {{with .Vendedor}}<p class="text-sm text-cafe-500 mt-4">Comprando de <span class="text-musgo-800 font-medium">{{.}}</span></p>{{end}}
+  </header>
+
+  {{with .Aviso}}
+  <div class="mt-8 max-w-2xl mx-auto rounded-xl bg-canela-50 border border-canela-200 px-5 py-4 text-sm text-canela-800 text-center">{{.}}</div>
+  {{end}}
 
   {{if not .Cart.Items}}
-    <div class="bg-white rounded-2xl shadow p-16 text-center text-gray-400 border border-stone-100">
-      <p class="text-6xl mb-4">🛒</p>
-      <p class="text-xl font-medium mb-4">Seu carrinho está vazio</p>
-      <a href="/" class="inline-block bg-shell-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-shell-600 transition">
-        Continuar Comprando
-      </a>
-    </div>
+  <div class="text-center py-20">
+    <svg class="w-24 h-24 mx-auto text-musgo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+    <p class="font-serif text-3xl text-musgo-900 mt-6">Sua sacola ainda está vazia.</p>
+    <p class="text-cafe-500 mt-2">Toda grande leitura começa com uma escolha.</p>
+    <a href="/#acervo" class="inline-block mt-8 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-7 py-3 rounded-full font-medium transition">
+      Explorar o acervo
+    </a>
+  </div>
   {{else}}
-    <div class="bg-white rounded-2xl shadow overflow-hidden border border-stone-100">
-      <table class="w-full">
-        <thead class="bg-forest-800 text-white">
-          <tr>
-            <th class="text-left px-6 py-3 text-sm font-semibold">Produto</th>
-            <th class="text-center px-4 py-3 text-sm font-semibold">Qtd</th>
-            <th class="text-right px-6 py-3 text-sm font-semibold">Subtotal</th>
-            <th class="px-4 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-stone-100">
-          {{range .Cart.Items}}
-          <tr class="hover:bg-shell-50 transition">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <img src="{{.Product.ImageURL}}" alt="{{.Product.Name}}"
-                     class="w-14 h-14 object-cover rounded-lg bg-stone-100"
-                     onerror="this.src='/static/img/placeholder.svg'"/>
-                <div>
-                  <p class="font-semibold text-gray-800">{{.Product.Name}}</p>
-                  <p class="text-sm text-gray-500">{{.Product.FormattedPrice}} cada</p>
-                </div>
-              </div>
-            </td>
-            <td class="px-4 py-4">
-              <form action="/carrinho/update" method="post" class="flex justify-center">
-                <input type="hidden" name="id" value="{{.Product.ID}}"/>
-                <input type="number" name="qty" value="{{.Quantity}}" min="1"
-                       onchange="this.form.submit()"
-                       class="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
-              </form>
-            </td>
-            <td class="px-6 py-4 text-right font-bold text-shell-600">
-              {{.FormattedSubtotal}}
-            </td>
-            <td class="px-4 py-4">
-              <form action="/carrinho/remove" method="post">
-                <input type="hidden" name="id" value="{{.Product.ID}}"/>
-                <button class="text-red-400 hover:text-red-600 transition text-lg font-bold" title="Remover">✕</button>
-              </form>
-            </td>
-          </tr>
-          {{end}}
-        </tbody>
-      </table>
+  <div class="mt-12 grid lg:grid-cols-[1fr_22rem] gap-10 items-start">
 
-      <div class="px-6 py-5 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
-        <a href="/" class="text-forest-600 text-sm hover:underline font-medium">← Continuar comprando</a>
-        <div class="text-right">
-          <p class="text-gray-500 text-sm">Total do pedido</p>
-          <p class="text-2xl font-bold text-shell-600">{{.Cart.FormattedTotal}}</p>
+    <!-- Itens -->
+    <ul class="divide-y divide-papel-300 border-y border-papel-300">
+      {{range .Cart.Items}}
+      <li class="py-6 flex gap-5 sm:gap-6">
+        <a href="/produto?id={{.Product.ID}}" class="livro shrink-0 w-20 sm:w-24">
+          <div class="livro-capa aspect-[2/3]">
+            {{template "capa" .Product}}
+          </div>
+        </a>
+
+        <div class="flex-1 min-w-0 flex flex-col">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-[11px] tracking-[.18em] uppercase text-musgo-600 font-medium">{{.Product.Category}}{{if .Product.IsDigital}} <span class="text-cafe-600">· {{if or (eq .Edition "audio") (eq .Edition "combo")}}{{.EditionLabel}}{{else}}E-book {{.Product.EbookTypeLabel}}{{end}}</span>{{end}}</p>
+              <a href="/produto?id={{.Product.ID}}" class="font-serif text-xl text-cafe-900 hover:text-musgo-700 transition line-clamp-2 mt-1">{{.Product.Name}}</a>
+              <p class="text-sm text-cafe-500 mt-1">{{if .Product.IsDigital}}{{.FormattedUnitPrice}} · {{if eq .Edition "audio"}}ouça ou baixe após o pagamento{{else}}download após o pagamento{{end}}{{else}}{{.Product.FormattedPrice}} cada{{end}}</p>
+              <p class="text-xs text-cafe-400 mt-0.5">{{if .Product.SoldBySite}}Vendido pelo Livredo{{else}}por {{.Product.SellerLabel}}{{with .Product.SellerKind}} · {{.}}{{end}}{{end}}</p>
+            </div>
+            <form action="/carrinho/remove" method="post">
+              <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+              <input type="hidden" name="id" value="{{.Product.ID}}"/>
+              <button class="w-9 h-9 rounded-full grid place-items-center text-cafe-400 hover:text-canela-600 hover:bg-canela-50 transition"
+                      title="Remover da sacola" aria-label="Remover {{.Product.Name}} da sacola">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div class="mt-auto pt-4 flex items-end justify-between gap-4">
+            {{if .Product.IsDigital}}
+            <p class="text-xs uppercase tracking-wider text-cafe-500">1 cópia digital</p>
+            {{else}}
+            <form action="/carrinho/update" method="post" class="flex items-center gap-2">
+              <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+              <input type="hidden" name="id" value="{{.Product.ID}}"/>
+              <label class="text-xs uppercase tracking-wider text-cafe-500" for="qtd-{{.Product.ID}}">Qtd.</label>
+              <input id="qtd-{{.Product.ID}}" type="number" name="qty" value="{{.Quantity}}" min="1"
+                     onchange="this.form.submit()"
+                     class="w-16 bg-papel-50 border border-papel-300 rounded-full px-2 py-1.5 text-center text-sm font-medium focus:outline-none focus:border-musgo-500"/>
+            </form>
+            {{end}}
+            <p class="font-serif text-xl text-canela-600">{{.FormattedSubtotal}}</p>
+          </div>
         </div>
-      </div>
-    </div>
+      </li>
+      {{end}}
+    </ul>
 
-    <div class="mt-4 text-right">
-      <a href="/checkout" class="inline-block bg-shell-500 text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-shell-600 transition shadow-md">
-        Finalizar Compra →
+    <!-- Resumo -->
+    <aside class="lg:sticky lg:top-40 rounded-2xl bg-white/75 border border-papel-300 p-7 shadow-[0_20px_40px_-30px_rgba(48,34,22,.6)]">
+      <h2 class="font-serif text-2xl text-musgo-950">Resumo</h2>
+      <dl class="mt-5 space-y-3 text-sm">
+        <div class="flex justify-between text-cafe-600">
+          <dt>{{.Cart.Count}} {{if eq .Cart.Count 1}}exemplar{{else}}exemplares{{end}}</dt>
+          <dd>{{.Cart.FormattedTotal}}</dd>
+        </div>
+        {{if .Cart.HasPhysical}}
+        <div class="flex justify-between text-cafe-500">
+          <dt>Frete</dt>
+          <dd>calculado pelo CEP no próximo passo</dd>
+        </div>
+        {{with .Vendedor}}
+        <p class="text-xs text-cafe-500 leading-relaxed">O envio é feito por <span class="font-medium text-cafe-700">{{.}}</span>, que despacha os livros e informa o rastreio.</p>
+        {{end}}
+        {{end}}
+      </dl>
+      <div class="ornamento my-6" aria-hidden="true"><span class="text-sm">✦</span></div>
+      <div class="flex items-baseline justify-between">
+        <span class="text-cafe-700">Total</span>
+        <span class="font-serif text-3xl text-canela-600">{{.Cart.FormattedTotal}}</span>
+      </div>
+      <a href="/checkout" class="mt-7 w-full inline-flex items-center justify-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-4 rounded-full font-medium shadow-sm transition">
+        Finalizar pedido
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
       </a>
-    </div>
+      <a href="/#acervo" class="mt-4 block text-center text-sm text-cafe-500 hover:text-musgo-700 transition">Continuar escolhendo</a>
+    </aside>
+  </div>
   {{end}}
 </div>
 {{end}}

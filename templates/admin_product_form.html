@@ -1,6 +1,6 @@
 {{template "admin_layout" .}}
 
-{{define "admin_heading"}}{{if .Product}}Editar Produto{{else}}Novo Produto{{end}}{{end}}
+{{define "admin_heading"}}{{if and .Product .Product.ID}}Editar Produto{{else}}Novo Produto{{end}}{{end}}
 
 {{define "admin_content"}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"/>
@@ -14,18 +14,30 @@
   <a href="/admin/produtos" class="text-forest-600 text-sm hover:underline font-medium">← Voltar</a>
   <div class="bg-white rounded-xl shadow p-6 mt-4 border border-stone-100">
     <h2 class="text-lg font-semibold text-forest-700 mb-5">
-      {{if .Product}}Editar: {{.Product.Name}}{{else}}Novo Produto{{end}}
+      {{if and .Product .Product.ID}}Editar: {{.Product.Name}}{{else}}Novo Produto{{end}}
     </h2>
 
     <form id="productForm"
-          action="{{if .Product}}/admin/produtos/editar?id={{.Product.ID}}{{else}}/admin/produtos/novo{{end}}"
+          action="{{if and .Product .Product.ID}}/admin/produtos/editar?id={{.Product.ID}}{{else}}/admin/produtos/novo{{end}}"
           method="post" enctype="multipart/form-data" class="space-y-4">
+	  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+
+      {{if .Error}}
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{.Error}}</div>
+      {{end}}
+
+      {{template "campo_formato" .}}
+
+      {{template "campo_isbn" .}}
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
         <input type="text" name="nome" required value="{{if .Product}}{{.Product.Name}}{{end}}"
                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
       </div>
+
+      {{template "campo_autor" .}}
+      {{template "campos_ficha" .}}
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
@@ -40,7 +52,7 @@
                  value="{{if .Product}}{{printf "%.2f" .Product.Price}}{{end}}"
                  class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
         </div>
-        <div>
+        <div data-so="fisico">
           <label class="block text-sm font-medium text-gray-700 mb-1">Estoque *</label>
           <input type="number" name="estoque" min="0" required
                  value="{{if .Product}}{{.Product.Stock}}{{end}}"
@@ -49,10 +61,39 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-        <input type="text" name="categoria"
-               value="{{if .Product}}{{.Product.Category}}{{else}}Geral{{end}}"
-               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
+        <select name="categoria" required
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400">
+          {{range .Categories}}<option value="{{.}}" {{if and $.Product (eq $.Product.Category .)}}selected{{end}}>{{.}}</option>{{end}}
+        </select>
+        <p class="text-xs text-gray-400 mt-1">
+          Gerencie a lista em <a href="/admin/categorias" class="text-shell-600 hover:underline font-medium">Categorias</a>.
+        </p>
+      </div>
+      <fieldset data-so="fisico">
+        <legend class="block text-sm font-medium text-gray-700 mb-2">Estado do livro *</legend>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex items-center gap-2.5 border border-gray-300 rounded-lg px-4 py-2.5 cursor-pointer has-[:checked]:border-musgo-600 has-[:checked]:bg-musgo-50 transition">
+            <input type="radio" name="estado" value="novo" required {{if and .Product (eq .Product.Condition "novo")}}checked{{end}} class="accent-[#1F5C3C]"/>
+            <span><span class="block text-sm font-medium">Novo</span><span class="block text-xs text-gray-500">Nunca foi lido</span></span>
+          </label>
+          <label class="flex items-center gap-2.5 border border-gray-300 rounded-lg px-4 py-2.5 cursor-pointer has-[:checked]:border-canela-600 has-[:checked]:bg-canela-50 transition">
+            <input type="radio" name="estado" value="usado" required {{if and .Product (eq .Product.Condition "usado")}}checked{{end}} class="accent-[#8A4F2F]"/>
+            <span><span class="block text-sm font-medium">Usado</span><span class="block text-xs text-gray-500">Conte o estado na descrição</span></span>
+          </label>
+        </div>
+      </fieldset>
+
+      {{template "campos_pacote" .}}
+
+    {{template "campos_ebook" .}}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vendedor responsável</label>
+        <select name="seller_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5">
+          <option value="0">Livredo (vendido pelo próprio site)</option>
+          {{range .Sellers}}<option value="{{.ID}}" {{if and $.Product (eq $.Product.SellerID .ID)}}selected{{end}}>{{.Name}} ({{.Username}})</option>{{end}}
+        </select>
       </div>
 
       <!-- ═══════════════════════════ IMAGEM ═══════════════════════════ -->
@@ -66,12 +107,12 @@
           <input type="file" id="imgUpload" name="imagem" accept="image/*" class="hidden"
                  onchange="handleImageSelect(this)"/>
           <div id="uploadPlaceholder">
-            <p class="text-3xl mb-1">📷</p>
+            <p class="mb-1.5 flex justify-center"><span class="w-11 h-11 rounded-xl bg-musgo-50 text-musgo-700 grid place-items-center [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "camera"}}</span></p>
             <p class="text-sm text-gray-500">Clique para selecionar uma imagem</p>
-            <p class="text-xs text-gray-400 mt-1">JPG, PNG, WEBP — máx. 5MB</p>
+            <p class="text-xs text-gray-400 mt-1">JPG, PNG, WEBP ou GIF — máx. 4 MB</p>
           </div>
           <div id="uploadSelected" class="hidden">
-            <p class="text-2xl mb-1">✂️</p>
+            <p class="mb-1.5 flex justify-center"><span class="w-10 h-10 rounded-xl bg-caramelo-100 text-canela-700 grid place-items-center [&>svg]:w-5 [&>svg]:h-5">{{template "icone" "recorte"}}</span></p>
             <p id="selectedFileName" class="text-sm font-medium text-gray-700 truncate max-w-xs mx-auto"></p>
             <p class="text-xs text-gray-400 mt-0.5">Clique para trocar</p>
           </div>
@@ -185,7 +226,7 @@
         </div>
 
         <!-- Imagem atual (somente modo edição) -->
-        {{if .Product}}
+        {{if and .Product .Product.ID}}
         <div id="currentImageRow" class="mt-2 flex items-center gap-3 p-2.5 bg-stone-50 rounded-lg border border-stone-200">
           <img src="{{.Product.ImageURL}}" alt="imagem atual"
                class="w-10 h-10 object-cover rounded-lg border border-stone-200 flex-shrink-0"
@@ -199,7 +240,7 @@
       </div>
       <!-- ═══════════════════════════════════════════════════════════════ -->
 
-      {{if .Product}}
+      {{if and .Product .Product.ID}}
       <div class="flex items-center gap-2">
         <input type="checkbox" name="ativo" id="ativo" {{if .Product.Active}}checked{{end}}
                class="w-4 h-4 accent-shell-500"/>
@@ -217,6 +258,7 @@
           Cancelar
         </a>
       </div>
+      {{template "script_formato"}}
     </form>
   </div>
 </div>

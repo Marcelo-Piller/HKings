@@ -1,0 +1,77 @@
+# Subir a loja:   docker compose up -d --build
+# Ver os logs:    docker compose logs -f loja
+# Fazer backup:   docker compose run --rm backup
+#
+# Os dados moram em volumes nomeados, não dentro do container. Isso é o que
+# permite rodar `docker compose down` e subir de novo sem perder pedidos,
+# clientes e imagens.
+
+services:
+  loja:
+    build: .
+    image: loja-vendas:latest
+    restart: unless-stopped
+    ports:
+      # 127.0.0.1 publica só na máquina local: em um servidor, quem deve ficar
+      # exposto na internet é o proxy reverso com HTTPS, não a aplicação.
+      - "127.0.0.1:8080:8080"
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DB_PATH: /data/loja.db
+      TZ: America/Sao_Paulo
+    volumes:
+      - loja-data:/data
+      - loja-uploads:/app/static/img/uploads
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    # Endurecimento do container: sem escalada de privilégio e com o sistema de
+    # arquivos da imagem somente leitura. Apenas os volumes de dados e /tmp são
+    # graváveis.
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Backup sob demanda: grava uma cópia íntegra do banco em ./backups, com a
+  # data no nome. Não sobe junto com a loja (profile "tools").
+  #
+  # Usa a própria aplicação com -backup, que faz VACUUM INTO. Copiar o arquivo
+  # .db por fora não serve: com WAL, as gravações recentes ficam no arquivo
+  # -wal e a cópia sairia incompleta.
+  backup:
+    image: loja-vendas:latest
+    profiles: ["tools"]
+    # Mesmo .env da loja: a aplicação exige SESSION_SECRET quando APP_ENV é
+    # production, inclusive para rodar só o backup.
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DB_PATH: /data/loja.db
+      TZ: America/Sao_Paulo
+    volumes:
+      - loja-data:/data
+      - loja-uploads:/fotos:ro
+      - ./backups:/backups
+    entrypoint: ["sh", "-c"]
+    # Depois do banco, copia os e-books (data/ebooks) e as fotos enviadas. Os
+    # nomes são aleatórios e um arquivo nunca é reescrito, então "cp -n" só
+    # copia o que é novo desde o último backup. Falha no banco encerra com
+    # erro; falta de arquivos para copiar, não.
+    command: ['./server -backup "/backups/loja-$$(date +%Y%m%d-%H%M%S).db" || exit 1; mkdir -p /backups/ebooks /backups/fotos /backups/audiobooks; cp -n /data/ebooks/* /backups/ebooks/ 2>/dev/null; cp -n /data/audiobooks/* /backups/audiobooks/ 2>/dev/null; cp -n /fotos/* /backups/fotos/ 2>/dev/null; exit 0']
+
+volumes:
+  loja-data:
+  loja-uploads:

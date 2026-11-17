@@ -1,0 +1,533 @@
+{{template "admin_layout" .}}
+
+{{define "admin_heading"}}Configurações{{end}}
+
+{{define "admin_content"}}
+<div class="max-w-2xl space-y-6">
+
+  {{if .Saved}}
+  <div class="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm font-medium">
+    <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "confere"}}</span>Configurações salvas com sucesso.
+  </div>
+  {{end}}
+
+  {{if .Error}}
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
+    {{.Error}}
+  </div>
+  {{end}}
+
+  <div class="bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-xs text-gray-600">
+    <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "cadeado"}}</span>Os campos de segredo nunca são exibidos depois de salvos. Deixe em branco para manter o valor atual.
+    Em produção, o recomendado é informá-los pelas variáveis de ambiente
+    <code class="bg-white px-1 rounded border">MERCADOPAGO_ACCESS_TOKEN</code> e
+    <code class="bg-white px-1 rounded border">MERCADOPAGO_WEBHOOK_SECRET</code>, que têm precedência sobre o banco.
+  </div>
+
+  <form action="/admin/configuracoes" method="post" class="space-y-6">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+
+    <!-- ── Mercado Pago ── -->
+    <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "cartao"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">Pagamentos — Mercado Pago</h2>
+          <p class="text-xs text-gray-500">PIX e cartão. O dinheiro cai direto na sua conta do Mercado Pago.</p>
+        </div>
+        <a href="/admin/configuracoes?testar=mp#mp" class="ml-auto text-sm text-shell-600 hover:underline font-medium whitespace-nowrap">Testar conexão</a>
+      </div>
+      <div class="p-5 space-y-4" id="mp">
+        {{with .TesteMP}}
+        <div class="rounded-lg border px-4 py-3 text-sm {{if .OK}}bg-green-50 border-green-200 text-green-800{{else}}bg-red-50 border-red-200 text-red-800{{end}}">
+          <p class="font-semibold">{{if .OK}}Conexão funcionando{{else}}O Access Token não está funcionando{{end}}</p>
+          <p class="mt-1">Chave em uso ({{.Origem}}): {{.Formato.Mensagem}}{{if .Formato.Espacos}} Atenção: o valor tem espaço ou quebra de linha no meio; cole de novo sem espaços.{{end}}</p>
+          {{with .Conta}}<p class="mt-1">Conta: <strong>{{.Nickname}}</strong>{{with .Email}} ({{.}}){{end}} · ID {{.ID}}{{with .SiteID}} · {{.}}{{end}}</p>{{end}}
+          {{with .Erro}}<p class="mt-1">{{.}}</p>{{end}}
+        </div>
+        {{end}}
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Access Token <span class="text-red-500">*</span>
+            {{if .HasAccessToken}}<span class="text-xs text-green-600 font-normal">— configurado</span>{{end}}
+          </label>
+          <input type="password" name="mp_access_token" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                 placeholder="{{if .HasAccessToken}}Deixe em branco para manter o valor atual{{else}}APP_USR-...{{end}}"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          <p class="text-xs text-gray-400 mt-1">
+            Obtenha em
+            <a href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" rel="noopener"
+               class="text-shell-600 hover:underline font-medium">
+              Mercado Pago → Suas integrações → Credenciais de produção
+            </a>
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Chave secreta do webhook <span class="text-red-500">*</span>
+            {{if .HasWebhookSecret}}<span class="text-xs text-green-600 font-normal">— configurada</span>{{end}}
+          </label>
+          <input type="password" name="mp_webhook_secret" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                 placeholder="{{if .HasWebhookSecret}}Deixe em branco para manter o valor atual{{else}}Cole a chave secreta da notificação{{end}}"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          <p class="text-xs text-gray-400 mt-1">
+            Sem essa chave o webhook é recusado, e nenhum pedido é confirmado automaticamente. Ela é o que impede
+            que alguém marque pedidos como pagos disparando notificações falsas para a sua URL.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">URL Base da Loja</label>
+          <input type="url" name="store_base_url" value="{{.StoreBaseURL}}"
+                 placeholder="https://seusite.com.br"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          <p class="text-xs text-gray-400 mt-1">
+            Obrigatória para cartão, porque o Checkout Pro precisa saber para onde devolver o cliente.
+            Em desenvolvimento local, use um túnel como
+            <a href="https://ngrok.com" target="_blank" rel="noopener" class="text-shell-600 hover:underline">ngrok</a>.
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            Webhook a cadastrar no Mercado Pago:
+            <code class="bg-stone-100 px-1 rounded">{{.WebhookURL}}</code>
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Loja</label>
+          <input type="text" name="store_name" value="{{.StoreName}}" maxlength="60"
+                 placeholder="Livredo"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          <p class="text-xs text-gray-400 mt-1">Aparece na fatura do cartão do cliente (apenas letras e números, até 13 caracteres).</p>
+        </div>
+
+        <details class="bg-blue-50 rounded-lg border border-blue-200">
+          <summary class="px-4 py-3 text-sm font-medium text-blue-800 cursor-pointer select-none">
+            <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "guia"}}</span>Como configurar o Mercado Pago (passo a passo)
+          </summary>
+          <ol class="px-5 pb-4 pt-2 text-sm text-blue-700 space-y-1.5 list-decimal list-inside">
+            <li>Crie uma conta em <strong>mercadopago.com.br</strong> (gratuito)</li>
+            <li>Cadastre seu CPF/CNPJ e dados bancários no painel</li>
+            <li>Em <strong>Seu negócio → Configurações</strong>, cadastre sua chave PIX</li>
+            <li>Acesse <strong>Suas integrações → Criar aplicação</strong> e abra as <strong>Credenciais de produção</strong></li>
+            <li>Copie o <strong>Access Token</strong> e cole no campo acima</li>
+            <li>Ainda na aplicação, abra <strong>Webhooks → Configurar notificações</strong></li>
+            <li>Informe a URL <code class="bg-white border border-blue-200 px-1 rounded">{{.WebhookURL}}</code> e marque os eventos <strong>Pagamentos</strong></li>
+            <li>Copie a <strong>chave secreta</strong> gerada ali e cole no campo acima</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+
+    <!-- ── Split de pagamentos ── -->
+    <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "divisao"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">Vendedores — divisão automática do pagamento</h2>
+          <p class="text-xs text-gray-500">Cada vendedor conecta a própria conta do Mercado Pago. Na venda, o valor cai na conta dele e a comissão na sua.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-4">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Comissão do site sobre vendas de vendedores (%)</label>
+          <input type="text" name="comissao_percentual" value="{{.Comissao}}" inputmode="decimal"
+                 class="w-32 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          <p class="text-xs text-gray-400 mt-1">Entre 0 e 50. Livros vendidos pelo próprio site não pagam comissão: 100% fica com você.</p>
+        </div>
+
+        <div>
+          <p class="block text-sm font-medium text-gray-700 mb-1">Desconto na comissão por nível do vendedor (pontos percentuais)</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {{range .Beneficios}}
+            <label class="text-xs text-gray-500">
+              {{template "selo_nivel" .Tier}} <span class="block mt-1">média {{.MinAverage}}</span>
+              <input type="text" name="desconto_{{.Tier.Key}}" value="{{pct .Discount}}" inputmode="decimal"
+                     class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+            </label>
+            {{end}}
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Ex.: comissão de 10% e desconto de 2 no Ouro: vendedores Ouro pagam 8%. O desconto só vale para quem tem pelo menos {{.MinAvaliacoes}} vendas avaliadas, para não ser burlado com poucas notas.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Client ID
+              {{if .HasClientID}}<span class="text-xs text-green-600 font-normal">— configurado</span>{{end}}
+            </label>
+            <input type="password" name="mp_client_id" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                   placeholder="{{if .HasClientID}}Deixe em branco para manter{{else}}Número do aplicativo{{end}}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Client Secret
+              {{if .HasClientSecret}}<span class="text-xs text-green-600 font-normal">— configurado</span>{{end}}
+            </label>
+            <input type="password" name="mp_client_secret" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                   placeholder="{{if .HasClientSecret}}Deixe em branco para manter{{else}}Chave secreta do aplicativo{{end}}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+        </div>
+
+        <div class="text-xs text-gray-500">
+          URL de redirecionamento a cadastrar no aplicativo do Mercado Pago:
+          {{if .OAuthRedirectURL}}<code class="bg-stone-100 px-1 rounded">{{.OAuthRedirectURL}}</code>
+          {{else}}<span class="text-red-600">preencha a URL Base da Loja acima</span>{{end}}
+        </div>
+
+        <details class="bg-blue-50 rounded-lg border border-blue-200">
+          <summary class="px-4 py-3 text-sm font-medium text-blue-800 cursor-pointer select-none">
+            <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "guia"}}</span>Como ativar a divisão automática
+          </summary>
+          <ol class="px-5 pb-4 pt-2 text-sm text-blue-700 space-y-1.5 list-decimal list-inside">
+            <li>No painel de desenvolvedor do Mercado Pago, abra a sua aplicação</li>
+            <li>Em <strong>Credenciais de produção</strong>, copie o <strong>Client ID</strong> e o <strong>Client Secret</strong> para os campos acima</li>
+            <li>Em <strong>Configurações da aplicação</strong>, cadastre a <strong>URL de redirecionamento</strong> mostrada acima (precisa ser https)</li>
+            <li>Os vendedores entram no painel deles e clicam em <strong>Conectar Mercado Pago</strong></li>
+            <li>Cada vendedor precisa ter uma <strong>chave PIX</strong> cadastrada na própria conta do Mercado Pago</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+
+    <!-- ── Frete: Melhor Envio ── -->
+    <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "caixa"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">Frete e etiquetas — Melhor Envio</h2>
+          <p class="text-xs text-gray-500">Calcula o frete no checkout e deixa cada vendedor gerar a etiqueta no pedido, com a própria conta Melhor Envio.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
+            <input type="text" name="melhorenvio_client_id" value="{{.MEClientID}}" autocomplete="off"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Client Secret
+              {{if .HasMESecret}}<span class="text-xs text-green-600 font-normal">— configurado</span>{{end}}
+            </label>
+            <input type="password" name="melhorenvio_client_secret" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                   placeholder="{{if .HasMESecret}}Deixe em branco para manter{{else}}Chave secreta do aplicativo{{end}}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4 items-end">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail de contato técnico</label>
+            <input type="email" name="melhorenvio_contato" value="{{.MEContato}}" placeholder="contato@livredo.com.br"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+            <p class="text-xs text-gray-400 mt-1">O Melhor Envio exige um e-mail de contato em cada chamada.</p>
+          </div>
+          <label class="flex items-center gap-2 text-sm text-gray-700 pb-2">
+            <input type="checkbox" name="melhorenvio_sandbox" value="1" {{if .MESandbox}}checked{{end}} class="w-4 h-4 accent-shell-500"/>
+            Ambiente de testes (sandbox) — etiquetas de mentira, saldo fictício
+          </label>
+        </div>
+        <div class="text-xs text-gray-500">
+          URL de redirecionamento a cadastrar no aplicativo do Melhor Envio:
+          {{if .MERedirectURL}}<code class="bg-stone-100 px-1 rounded">{{.MERedirectURL}}</code>
+          {{else}}<span class="text-red-600">preencha a URL Base da Loja acima</span>{{end}}
+        </div>
+        <details class="bg-blue-50 rounded-lg border border-blue-200">
+          <summary class="px-4 py-3 text-sm font-medium text-blue-800 cursor-pointer select-none">
+            <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "guia"}}</span>Como ativar o frete com o Melhor Envio
+          </summary>
+          <ol class="px-5 pb-4 pt-2 text-sm text-blue-700 space-y-1.5 list-decimal list-inside">
+            <li>Para testar, crie uma conta em <strong>sandbox.melhorenvio.com.br</strong> e marque "Ambiente de testes" acima. Em produção, use <strong>melhorenvio.com.br</strong></li>
+            <li>No painel, vá em <strong>Integrações → Área Dev → Novo aplicativo</strong></li>
+            <li>Preencha nome (Livredo), site e o e-mail técnico, e cole a <strong>URL de redirecionamento</strong> mostrada acima</li>
+            <li>Copie o <strong>Client ID</strong> e o <strong>Client Secret</strong> para os campos acima e salve</li>
+            <li>Em <strong>Envio</strong> (menu ao lado), cadastre de onde o site despacha e conecte a conta da loja</li>
+            <li>Cada vendedor faz o mesmo no painel dele, em <strong>Envio</strong>. A etiqueta é paga com o saldo da conta Melhor Envio de quem envia</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+
+    <!-- ── Despacho ── -->
+    <div id="despacho" class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "caixa"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">Prazo de postagem e avisos ao comprador</h2>
+          <p class="text-xs text-gray-500">Prazo contado em horas úteis (sem fins de semana e feriados) a partir do pagamento. O comprador recebe um e-mail a cada passo.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-5">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Lojas: editoras, sebos e livrarias (horas úteis)</label>
+            <input name="sla_loja_horas" value="{{.SLALoja}}" placeholder="48" inputmode="numeric" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Pessoas: autores e leitores (horas úteis)</label>
+            <input name="sla_pessoa_horas" value="{{.SLAPessoa}}" placeholder="72" inputmode="numeric" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm"/>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500">Em branco valem 48 h e 72 h. Use múltiplos de 24 (24, 48, 72…).</p>
+        {{range .AvisosCompra}}
+        <details class="rounded-lg border border-stone-200">
+          <summary class="px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer">E-mail ao comprador: {{.Label}}</summary>
+          <div class="px-4 pb-4 space-y-2">
+            <input name="{{.SubjKey}}" value="{{.Subject}}" maxlength="150" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"/>
+            <textarea name="{{.BodyKey}}" rows="6" maxlength="2000" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono">{{.Body}}</textarea>
+          </div>
+        </details>
+        {{end}}
+        <p class="text-xs text-gray-500">Marcadores: <code>{nome}</code> <code>{pedido}</code> <code>{vendedor}</code> <code>{loja}</code> <code>{prazo}</code> <code>{rastreio}</code> <code>{link_rastreio}</code> <code>{link_pedido}</code>.</p>
+      </div>
+    </div>
+
+    <!-- ── LGPD ── -->
+    <div id="lgpd" class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "chave"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">LGPD — responsável pelos dados</h2>
+          <p class="text-xs text-gray-500">Aparece nos <a href="/termos" target="_blank" class="underline">Termos de Uso</a> e na <a href="/privacidade" target="_blank" class="underline">Política de Privacidade</a>. A lei exige identificar o controlador e o canal do encarregado (DPO).</p>
+        </div>
+      </div>
+      <div class="p-5 grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Controlador (razão social ou nome completo)</label>
+          <input type="text" name="lgpd_controlador" value="{{.LGPDControlador}}" maxlength="150" placeholder="Ex.: Livredo Comércio de Livros Ltda."
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">CNPJ ou CPF</label>
+          <input type="text" name="lgpd_documento" value="{{.LGPDDocumento}}" maxlength="20"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Encarregado de dados (DPO)</label>
+          <input type="text" name="lgpd_encarregado" value="{{.LGPDEncarregado}}" maxlength="120" placeholder="Nome de quem responde pelos dados"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">E-mail do encarregado</label>
+          <input type="email" name="lgpd_email" value="{{.LGPDEmail}}" maxlength="120" placeholder="privacidade@livredo.com.br"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Google Books ── -->
+    <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "livros"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">Busca por ISBN — Google Books</h2>
+          <p class="text-xs text-gray-500">Preenche título, autor, editora, idioma, sinopse e capa na importação de planilha e no cadastro. Sem a chave, a busca usa só o Open Library (sem idioma e sinopse) e a cota grátis do Google costuma estar esgotada.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Chave de API do Google Books
+          {{if .HasBooksKey}}<span class="text-xs text-green-600 font-normal">— configurada</span>{{end}}
+        </label>
+        <input type="password" name="google_books_api_key" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+               placeholder="{{if .HasBooksKey}}Deixe em branco para manter{{else}}AIza...{{end}}"
+               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+        <p class="text-xs text-gray-500">Grátis: no <strong>console.cloud.google.com</strong> (pode ser o mesmo projeto do login com Google), ative a
+          “Books API” em APIs e serviços → Biblioteca e crie uma <strong>chave de API</strong> em Credenciais. Limite grátis de 1.000 buscas por dia.</p>
+      </div>
+    </div>
+
+    <!-- ── Login com Google ── -->
+    <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "chave"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">Login com Google — compradores</h2>
+          <p class="text-xs text-gray-500">Mostra o botão “Continuar com o Google” no login e no cadastro de clientes. O site recebe só nome e e-mail.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
+            <input type="text" name="google_client_id" value="{{.GoogleClientID}}" autocomplete="off"
+                   placeholder="000000000000-xxxx.apps.googleusercontent.com"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Client Secret
+              {{if .HasGoogleSecret}}<span class="text-xs text-green-600 font-normal">— configurado</span>{{end}}
+            </label>
+            <input type="password" name="google_client_secret" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                   placeholder="{{if .HasGoogleSecret}}Deixe em branco para manter{{else}}GOCSPX-...{{end}}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+        </div>
+
+        <div class="text-xs text-gray-500">
+          URI de redirecionamento autorizado, a cadastrar no Google Cloud:
+          {{if .GoogleRedirectURL}}<code class="bg-stone-100 px-1 rounded">{{.GoogleRedirectURL}}</code>
+          {{else}}<span class="text-red-600">preencha a URL Base da Loja acima</span>{{end}}
+        </div>
+
+        <details class="bg-blue-50 rounded-lg border border-blue-200">
+          <summary class="px-4 py-3 text-sm font-medium text-blue-800 cursor-pointer select-none">
+            <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "guia"}}</span>Como criar as credenciais no Google
+          </summary>
+          <ol class="px-5 pb-4 pt-2 text-sm text-blue-700 space-y-1.5 list-decimal list-inside">
+            <li>Acesse <strong>console.cloud.google.com</strong> e crie um projeto (ex.: “Livredo”)</li>
+            <li>Em <strong>APIs e serviços → Tela de consentimento OAuth</strong>, escolha <strong>Externo</strong> e preencha nome do app, e-mail de suporte e logotipo</li>
+            <li>Em <strong>Escopos</strong>, mantenha só <code>openid</code>, <code>email</code> e <code>profile</code></li>
+            <li>Em <strong>Credenciais → Criar credenciais → ID do cliente OAuth</strong>, tipo <strong>Aplicativo da Web</strong></li>
+            <li>Em <strong>URIs de redirecionamento autorizados</strong>, cole o endereço mostrado acima (precisa ser https)</li>
+            <li>Copie o <strong>Client ID</strong> e o <strong>Client Secret</strong> para os campos acima e salve</li>
+            <li>Enquanto o app estiver em <strong>Teste</strong>, só os e-mails cadastrados como testadores conseguem entrar; publique o app para liberar a todos</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+
+    <!-- ── E-mail (comprovantes) ── -->
+    <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "carta"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">E-mail — comprovantes para os compradores</h2>
+          <p class="text-xs text-gray-500">Quando o pagamento é confirmado, o comprador recebe o comprovante em PDF. Ele também pode pedir de novo na tela do pedido.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-4" id="email">
+        {{with .TesteEmail}}
+        <div class="rounded-lg border px-4 py-3 text-sm {{if .OK}}bg-green-50 border-green-200 text-green-800{{else}}bg-red-50 border-red-200 text-red-800{{end}}">
+          <p class="font-semibold">{{if .OK}}E-mail de teste enviado{{else}}O e-mail não funcionou{{end}}</p>
+          <p class="mt-1">Servidor: {{.Server}}{{if .To}} · conta: {{.To}}{{end}}{{if not .OK}} · senha salva com {{.Password}} caracteres{{end}}</p>
+          <p class="mt-1">{{.Detail}}</p>
+          {{with .Hint}}<p class="mt-2 font-medium">{{.}}</p>{{end}}
+        </div>
+        {{end}}
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Conta Gmail que envia</label>
+            <input type="email" name="smtp_user" value="{{.SMTP.User}}" autocomplete="off" placeholder="sualoja@gmail.com"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Senha de app
+              {{if .HasSMTPPassword}}<span class="text-xs text-green-600 font-normal">— configurada</span>{{end}}
+            </label>
+            <input type="password" name="smtp_password" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                   placeholder="{{if .HasSMTPPassword}}Deixe em branco para manter{{else}}16 letras, gerada pelo Google{{end}}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Servidor</label>
+            <input type="text" name="smtp_host" value="{{.SMTP.Host}}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Porta</label>
+            <input type="text" name="smtp_port" value="{{.SMTP.Port}}" inputmode="numeric"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="submit" formaction="/admin/configuracoes/email-teste" formnovalidate
+                  class="px-4 py-2 rounded-lg border border-stone-300 bg-white text-sm font-medium text-gray-700 hover:border-forest-500">Enviar e-mail de teste</button>
+          <span class="text-xs text-gray-500">Manda uma mensagem para a própria conta acima, usando o que está salvo (salve antes se acabou de mudar).</span>
+        </div>
+        {{with .BoasVindas}}
+        <div id="boasvindas" class="rounded-lg border border-stone-200 bg-stone-50 p-4 text-sm text-gray-700 space-y-2">
+          <p class="font-medium text-gray-800">Boas-vindas</p>
+          <p class="text-xs text-gray-500">Quem se cadastra recebe sozinho um e-mail de boas-vindas: um para clientes e outro, com os primeiros passos, para vendedores. Ninguém recebe duas vezes.</p>
+          {{if .Running}}
+          <p class="text-forest-800">Enviando… {{.Sent}} enviados{{if .Failed}}, {{.Failed}} falharam{{end}}. Atualize a página para acompanhar.</p>
+          {{else}}
+          {{if .Finished}}<p class="{{if .Failed}}text-red-700{{else}}text-forest-800{{end}}">Último envio ({{.Finished}}): {{.Sent}} enviados{{if .Failed}}, {{.Failed}} falharam{{end}}.{{with .LastError}} Erro: {{.}}{{end}}</p>{{end}}
+          {{if or .Clientes .Vendedores}}
+          <p>Ainda não receberam: <strong>{{.Clientes}} cliente(s)</strong> e <strong>{{.Vendedores}} vendedor(es)</strong> já cadastrados.</p>
+          <button type="submit" formaction="/admin/configuracoes/boas-vindas" formnovalidate
+                  onclick="return confirm('Enviar o e-mail de boas-vindas para todos os cadastrados que ainda não receberam?')"
+                  class="px-4 py-2 rounded-lg bg-forest-800 hover:bg-forest-700 text-white text-sm font-medium">Enviar boas-vindas aos já cadastrados</button>
+          <p class="text-xs text-gray-500">Vai um a cada 3 segundos, até 450 por clique (limite diário do Gmail). Se houver mais, clique de novo no dia seguinte.</p>
+          {{else}}
+          <p class="text-forest-800">Todos os cadastrados já receberam as boas-vindas.</p>
+          {{end}}
+          {{end}}
+        </div>
+        {{end}}
+        <details class="bg-blue-50 rounded-lg border border-blue-200">
+          <summary class="px-4 py-3 text-sm font-medium text-blue-800 cursor-pointer select-none">
+            <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "guia"}}</span>Como gerar a senha de app do Gmail
+          </summary>
+          <ol class="px-5 pb-4 pt-2 text-sm text-blue-700 space-y-1.5 list-decimal list-inside">
+            <li>Na conta Google que vai enviar, ative a <strong>Verificação em duas etapas</strong></li>
+            <li>Abra <strong>myaccount.google.com/apppasswords</strong></li>
+            <li>Crie uma senha com o nome "Livredo" e copie as 16 letras</li>
+            <li>Cole no campo <strong>Senha de app</strong> acima. Não use a senha normal da conta</li>
+          </ol>
+          <p class="px-5 pb-4 text-xs text-blue-700">Recomendado: uma conta Gmail só da loja, e não a sua pessoal.</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- ── WhatsApp ── -->
+    <div class="bg-white rounded-xl shadow border border-stone-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-stone-100 bg-stone-50 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-musgo-50 border border-musgo-100 text-musgo-700 grid place-items-center shrink-0 [&>svg]:w-6 [&>svg]:h-6">{{template "icone" "celular"}}</span>
+        <div>
+          <h2 class="font-semibold text-gray-800">Notificação WhatsApp</h2>
+          <p class="text-xs text-gray-500">Receba uma mensagem no WhatsApp toda vez que um pedido for pago.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-4">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Seu número de WhatsApp</label>
+          <input type="text" name="whatsapp_phone" value="{{.WhatsAppPhone}}"
+                 placeholder="5511999999999"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+          <p class="text-xs text-gray-400 mt-1">Formato internacional sem + nem espaços: <code class="bg-stone-100 px-1 rounded">5511999999999</code></p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            API Key do CallMeBot
+            {{if .HasWhatsAppKey}}<span class="text-xs text-green-600 font-normal">— configurada</span>{{end}}
+          </label>
+          <input type="password" name="whatsapp_api_key" autocomplete="new-password" data-lpignore="true" data-1p-ignore
+                 placeholder="{{if .HasWhatsAppKey}}Deixe em branco para manter o valor atual{{else}}123456{{end}}"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+        </div>
+
+        <details class="bg-green-50 rounded-lg border border-green-200">
+          <summary class="px-4 py-3 text-sm font-medium text-green-800 cursor-pointer select-none">
+            <span class="inline-block align-[-3px] mr-1 [&>svg]:w-4 [&>svg]:h-4">{{template "icone" "guia"}}</span>Como obter a API Key do CallMeBot (gratuito)
+          </summary>
+          <ol class="px-5 pb-4 pt-2 text-sm text-green-700 space-y-1.5 list-decimal list-inside">
+            <li>Salve o número <strong>+34 644 82 56 81</strong> nos seus contatos como "CallMeBot"</li>
+            <li>Envie a mensagem exata pelo WhatsApp:<br>
+                <code class="bg-white border border-green-200 px-2 py-0.5 rounded text-xs block mt-1">I allow callmebot to send me messages</code>
+            </li>
+            <li>O bot responderá com sua <strong>API Key</strong> em alguns segundos</li>
+            <li>Cole a API Key no campo acima e salve</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full bg-shell-500 hover:bg-shell-600 text-white font-semibold py-3 rounded-xl transition shadow">
+      Salvar Configurações
+    </button>
+  </form>
+</div>
+{{end}}

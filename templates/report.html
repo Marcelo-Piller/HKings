@@ -1,0 +1,81 @@
+{{template "layout" .}}
+
+{{define "title"}}Denunciar vendedor — Livredo{{end}}
+
+{{define "content"}}
+<div class="max-w-2xl mx-auto px-4 pt-12">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-canela-600 font-medium"><span class="text-caramelo-500">✦</span> Denúncia</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Algo deu <em class="italic text-canela-600">errado?</em></h1>
+    <p class="text-cafe-600 mt-4 max-w-md mx-auto leading-relaxed">
+      Conte o que aconteceu. A equipe do Livredo analisa cada denúncia e pode suspender o vendedor.
+      O vendedor <strong class="font-medium text-cafe-800">não fica sabendo</strong> quem denunciou.
+    </p>
+  </header>
+
+  <div class="mt-8 flex items-center gap-4 rounded-2xl border border-papel-300 bg-papel-50 px-5 py-4">
+    {{template "avatar" dict "URL" .Seller.AvatarURL "Nome" .Seller.Name "Tam" "w-12 h-12" "Texto" "text-xl"}}
+    <div class="min-w-0">
+      <p class="text-[11px] tracking-[.18em] uppercase text-cafe-500">Vendedor denunciado</p>
+      <p class="font-serif text-lg text-cafe-900 leading-tight truncate">{{.Seller.Name}}</p>
+      {{with .Product}}<p class="text-sm text-cafe-600 mt-0.5 truncate">Livro: <span class="font-serif italic">{{.Name}}</span>{{if .IsDigital}} · E-book{{end}}</p>{{end}}
+    </div>
+  </div>
+
+  {{if .Sent}}
+  <div class="mt-8 rounded-2xl bg-musgo-50 border border-musgo-200 px-6 py-8 text-center">
+    <p class="font-serif text-2xl text-musgo-900">Denúncia recebida</p>
+    <p class="text-sm text-musgo-800 mt-2 leading-relaxed">Obrigado por avisar. Se precisarmos de mais detalhes, entraremos em contato pelo seu e-mail.</p>
+    <a href="/" class="mt-6 inline-flex bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-6 py-3 rounded-full text-sm font-medium shadow-sm transition">Voltar à loja</a>
+  </div>
+  {{else}}
+
+  {{with .Error}}
+  <div class="mt-8 rounded-xl bg-canela-50 border border-canela-200 px-4 py-3 text-sm text-canela-800 text-center">{{.}}</div>
+  {{end}}
+
+  <form action="/denunciar" method="post" class="mt-8 rounded-2xl bg-white/75 border border-papel-300 p-7 space-y-6">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+    <input type="hidden" name="vendedor" value="{{.Seller.ID}}"/>
+    {{with .Product}}<input type="hidden" name="livro" value="{{.ID}}"/>{{end}}
+
+    <fieldset>
+      <legend class="block text-sm text-cafe-600 mb-2.5">Motivo</legend>
+      <div class="grid sm:grid-cols-2 gap-2.5">
+        {{range .Reasons}}
+        <label class="flex items-center gap-3 rounded-xl border border-papel-300 bg-papel-50 px-4 py-3 text-sm text-cafe-800 cursor-pointer hover:border-canela-400 has-[:checked]:border-canela-500 has-[:checked]:bg-canela-50 transition">
+          <input type="radio" name="motivo" value="{{.Key}}" required {{if eq .Key $.Reason}}checked{{end}} class="accent-canela-600"/>
+          {{.Label}}
+        </label>
+        {{end}}
+      </div>
+    </fieldset>
+
+    {{if .Orders}}
+    <div>
+      <label for="pedido" class="block text-sm text-cafe-600 mb-1.5">Pedido envolvido <span class="text-cafe-400">(opcional)</span></label>
+      <select id="pedido" name="pedido"
+              class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition">
+        <option value="0">Nenhum pedido específico</option>
+        {{range .Orders}}
+        <option value="{{.ID}}" {{if eq .ID $.OrderID}}selected{{end}}>Pedido nº {{.ID}} — {{.FormattedTotal}} — {{.StatusLabel}}</option>
+        {{end}}
+      </select>
+    </div>
+    {{end}}
+
+    <div>
+      <label for="descricao" class="block text-sm text-cafe-600 mb-1.5">O que aconteceu?</label>
+      <textarea id="descricao" name="descricao" rows="6" required minlength="20" maxlength="2000"
+                class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"
+                placeholder="Descreva com datas e detalhes: o que foi combinado, o que chegou (ou não), mensagens recebidas…">{{.Description}}</textarea>
+      <p class="text-xs text-cafe-400 mt-1.5">Nunca envie senhas ou dados de cartão. Para golpe com dinheiro envolvido, registre também um boletim de ocorrência.</p>
+    </div>
+
+    <button type="submit" class="bg-canela-600 hover:bg-canela-700 text-white px-7 py-3 rounded-full font-medium shadow-sm transition">
+      Enviar denúncia
+    </button>
+  </form>
+  {{end}}
+</div>
+{{end}}

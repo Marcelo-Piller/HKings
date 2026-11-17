@@ -1,0 +1,56 @@
+{{template "admin_layout" .}}
+
+{{define "admin_heading"}}Categorias{{end}}
+
+{{define "admin_content"}}
+<div class="max-w-4xl">
+  <p class="text-sm text-gray-500 mb-5">
+    Esta é a lista que aparece nos formulários de produto do admin e do vendedor. O vendedor só escolhe entre estas
+    opções, o que evita variações como "Roupas", "roupas" e "Roupa" quebrando os filtros da loja.
+  </p>
+
+  {{if .Error}}
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-5">{{.Error}}</div>
+  {{end}}
+
+  <div class="grid lg:grid-cols-[1fr_2fr] gap-6">
+    <form action="/admin/categorias" method="post" class="bg-white rounded-xl shadow p-6 space-y-4 h-fit border border-stone-100">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+      <h2 class="font-semibold text-forest-700">Nova categoria</h2>
+      <input name="nome" required maxlength="40" placeholder="Ex.: Eletrônicos"
+             class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"/>
+      <button class="w-full bg-shell-500 hover:bg-shell-600 text-white px-4 py-2.5 rounded-lg font-semibold transition">
+        Adicionar
+      </button>
+    </form>
+
+    <div class="bg-white rounded-xl shadow overflow-hidden border border-stone-100">
+      <table class="w-full text-sm">
+        <thead class="bg-stone-50 text-xs uppercase text-gray-500">
+          <tr>
+            <th class="text-left px-5 py-3">Categoria</th>
+            <th class="px-5 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          {{range .Categories}}
+          <tr>
+            <td class="px-5 py-3 font-medium text-gray-700">{{.Name}}</td>
+            <td class="px-5 py-3 text-right">
+              <form action="/admin/categorias" method="post" class="inline">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+                <input type="hidden" name="acao" value="excluir"/>
+                <input type="hidden" name="id" value="{{.ID}}"/>
+                <button class="text-red-600 hover:underline">Excluir</button>
+              </form>
+            </td>
+          </tr>
+          {{else}}
+          <tr><td colspan="2" class="px-5 py-8 text-center text-gray-400">Nenhuma categoria cadastrada.</td></tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}

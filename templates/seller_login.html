@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  {{template "brand_head" .}}
+  <title>Área do vendedor — Livredo</title>
+</head>
+<body class="papel-textura font-sans text-cafe-800 min-h-screen flex items-center justify-center p-4 antialiased">
+<div class="bg-white/85 w-full max-w-md rounded-3xl p-9 border border-papel-300 shadow-[0_30px_50px_-35px_rgba(48,34,22,.65)]">
+  <p class="font-serif text-lg text-musgo-700">Livre<em class="italic">do</em></p>
+  <h1 class="font-serif text-4xl text-musgo-950 mt-1">Área do <em class="italic text-musgo-600">vendedor</em></h1>
+  <p class="text-sm text-cafe-500 mt-2 mb-6">Acompanhe seus livros e pedidos.</p>
+
+  {{if .Error}}
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{{.Error}}</div>
+  {{end}}
+
+  {{with .GoogleAviso}}
+  <div class="rounded-lg bg-canela-50 border border-canela-200 text-canela-800 px-4 py-3 text-sm mb-4">{{.}}</div>
+  {{end}}
+  {{if .GoogleLogin}}
+  <a href="/conta/google?papel=vendedor"
+     class="flex items-center justify-center gap-3 w-full bg-white border border-[#DADCE0] hover:bg-[#F8FAFF] text-[#1F1F1F] py-2.5 rounded-full font-medium shadow-sm transition">
+    <svg class="w-5 h-5" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+    Continuar com o Google
+  </a>
+  <div class="flex items-center gap-3 my-5 text-xs tracking-[.18em] uppercase text-cafe-400" aria-hidden="true">
+    <span class="flex-1 h-px bg-papel-300"></span>ou com usuário<span class="flex-1 h-px bg-papel-300"></span>
+  </div>
+  {{end}}
+
+  <form action="/vendedor/login" method="post" class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+      <input name="usuario" required autocomplete="username"
+             class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+      <input type="password" name="senha" required autocomplete="current-password"
+             class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-musgo-400"/>
+    </div>
+    <button class="w-full bg-musgo-800 hover:bg-musgo-700 text-papel-50 rounded-full py-2.5 font-semibold transition">
+      Entrar
+    </button>
+  </form>
+
+  <p class="text-sm text-gray-500 text-center mt-6">
+    Ainda não vende aqui?
+    <a href="/vendedor/cadastro" class="text-musgo-700 font-medium underline decoration-caramelo-400 underline-offset-4">Criar conta de vendedor</a>
+  </p>
+</div>
+</body>
+</html>

@@ -1,71 +1,317 @@
 {{template "layout" .}}
 
-{{define "title"}}MinhaLoja - Produtos{{end}}
+{{define "title"}}Livredo — onde cada história encontra seu próximo leitor{{end}}
 
 {{define "content"}}
-<!-- Hero -->
-<section class="bg-gradient-to-br from-forest-800 via-forest-700 to-forest-600 text-white py-16">
-  <div class="max-w-6xl mx-auto px-4 text-center">
-    <h1 class="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Bem-vindo à MinhaLoja</h1>
-    <p class="text-lg text-forest-200 mb-8">Os melhores produtos com os melhores preços</p>
-    <form action="/" method="get" class="flex justify-center">
-      <input name="q" type="text" placeholder="O que você está procurando?" value="{{.Search}}"
-        class="w-72 md:w-96 px-5 py-3 rounded-l-full text-gray-800 focus:outline-none shadow-md"/>
-      <button class="bg-shell-500 hover:bg-shell-600 text-white font-semibold px-7 py-3 rounded-r-full transition shadow-md">
-        Buscar
-      </button>
-    </form>
+{{$catAtiva := and .SelectedCat (ne .SelectedCat "Todos")}}
+{{$filtrando := or .Search .Estado $catAtiva}}
+
+{{if not $filtrando}}
+<!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+<section class="relative overflow-hidden">
+  <div class="pointer-events-none absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-camurca-200/60 blur-3xl"></div>
+  <div class="pointer-events-none absolute top-48 -right-24 w-96 h-96 rounded-full bg-caramelo-200/40 blur-3xl"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 pt-14 pb-16 md:pt-20 md:pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-6 items-center">
+    <div class="surgir">
+      <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium">
+        <span class="text-caramelo-500">✦</span> Bem-vindo ao Livredo
+      </p>
+      <h1 class="font-serif text-[2.9rem] sm:text-6xl lg:text-7xl leading-[1.04] tracking-tight text-musgo-950 mt-5">
+        Onde cada história encontra seu
+        <em class="italic font-normal text-musgo-600 sublinhado">próximo leitor</em>.
+      </h1>
+      <p class="text-lg text-cafe-600 leading-relaxed mt-6 max-w-xl">
+        Descubra livros vendidos por leitores e livreiros independentes, escolha com calma
+        e leve para casa a sua próxima leitura favorita.
+      </p>
+
+      <form action="/" method="get" role="search"
+            class="mt-9 flex items-center max-w-xl bg-white/80 border border-papel-300 rounded-full p-1.5 shadow-[0_10px_30px_-18px_rgba(48,34,22,.5)] focus-within:border-musgo-500 transition">
+        <svg class="w-5 h-5 ml-4 text-cafe-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input name="q" type="search" placeholder="Que história você procura hoje?" aria-label="Buscar livros"
+               class="flex-1 min-w-0 bg-transparent px-3 py-3 text-[15px] placeholder-cafe-400 focus:outline-none"/>
+        <button class="bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-6 sm:px-7 py-3 rounded-full text-sm font-medium transition">
+          Buscar
+        </button>
+      </form>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+        <a href="#acervo" class="inline-flex items-center gap-2 text-musgo-800 font-medium border-b-2 border-caramelo-400 pb-0.5 hover:border-musgo-700 transition">
+          Explorar o acervo
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </a>
+        {{$n := len .Products}}
+        <p class="text-sm text-cafe-500">
+          <span class="font-serif text-2xl text-musgo-800 align-middle">{{$n}}</span>
+          <span class="align-middle ml-1">{{if eq $n 1}}título{{else}}títulos{{end}} na estante agora</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Ilustração: estante sob a janela em arco -->
+    <div class="relative surgir" style="animation-delay:.15s">
+      <svg viewBox="0 0 520 440" class="w-full h-auto max-w-xl mx-auto" role="img" aria-label="Ilustração de uma estante com livros e uma planta sob uma janela em arco">
+        <defs>
+          <linearGradient id="lombada" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stop-color="#000" stop-opacity=".22"/>
+            <stop offset=".35" stop-color="#fff" stop-opacity=".14"/>
+            <stop offset=".7" stop-color="#000" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000" stop-opacity=".16"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Janela em arco e luz do fim de tarde -->
+        <path d="M96 372V170a164 164 0 0 1 328 0v202z" fill="#F0E4D3"/>
+        <path d="M260 6v366M96 250h328" stroke="#E3CFB4" stroke-width="2" opacity=".8"/>
+        <path d="M96 372V170a164 164 0 0 1 328 0v202" fill="none" stroke="#E3CFB4" stroke-width="3"/>
+        <circle cx="352" cy="112" r="38" fill="#EACFA3" opacity=".8"/>
+
+        <!-- Livros em pé -->
+        <g>
+          <rect x="112" y="168" width="34" height="204" rx="2" fill="#1F5C3C"/>
+          <rect x="112" y="184" width="34" height="4" fill="#CC9A52"/><rect x="112" y="192" width="34" height="2" fill="#CC9A52"/>
+          <rect x="112" y="350" width="34" height="4" fill="#CC9A52"/>
+          <rect x="117" y="233" width="24" height="38" rx="2" fill="#F7EFE2" opacity=".92"/>
+          <rect x="121" y="244" width="16" height="2.5" fill="#43362A" opacity=".35"/><rect x="121" y="251" width="12" height="2.5" fill="#43362A" opacity=".35"/>
+          <rect x="112" y="168" width="34" height="204" rx="2" fill="url(#lombada)"/>
+        </g>
+        <g>
+          <rect x="148" y="202" width="26" height="170" rx="2" fill="#B37F3A"/>
+          <rect x="148" y="218" width="26" height="4" fill="#1F5C3C"/><rect x="148" y="226" width="26" height="2" fill="#1F5C3C"/>
+          <rect x="148" y="350" width="26" height="4" fill="#1F5C3C"/>
+          <circle cx="161" cy="282" r="5" fill="#1F5C3C" opacity=".85"/>
+          <rect x="148" y="202" width="26" height="170" rx="2" fill="url(#lombada)"/>
+        </g>
+        <g>
+          <rect x="176" y="146" width="40" height="226" rx="2" fill="#A3613A"/>
+          <rect x="176" y="162" width="40" height="4" fill="#F5E7D0"/><rect x="176" y="170" width="40" height="2" fill="#F5E7D0"/>
+          <rect x="176" y="350" width="40" height="4" fill="#F5E7D0"/>
+          <rect x="181" y="218" width="30" height="42" rx="2" fill="#F7EFE2" opacity=".92"/>
+          <rect x="186" y="230" width="20" height="2.5" fill="#43362A" opacity=".35"/><rect x="186" y="237" width="14" height="2.5" fill="#43362A" opacity=".35"/>
+          <rect x="176" y="146" width="40" height="226" rx="2" fill="url(#lombada)"/>
+        </g>
+        <g>
+          <rect x="218" y="188" width="24" height="184" rx="2" fill="#E2CFAE"/>
+          <rect x="218" y="204" width="24" height="4" fill="#A3613A"/><rect x="218" y="212" width="24" height="2" fill="#A3613A"/>
+          <rect x="218" y="350" width="24" height="4" fill="#A3613A"/>
+          <rect x="218" y="188" width="24" height="184" rx="2" fill="url(#lombada)"/>
+        </g>
+        <g>
+          <rect x="244" y="164" width="32" height="208" rx="2" fill="#30261D"/>
+          <rect x="244" y="180" width="32" height="4" fill="#CC9A52"/><rect x="244" y="188" width="32" height="2" fill="#CC9A52"/>
+          <rect x="244" y="350" width="32" height="4" fill="#CC9A52"/>
+          <rect x="249" y="230" width="22" height="36" rx="2" fill="#F7EFE2" opacity=".92"/>
+          <rect x="253" y="241" width="14" height="2.5" fill="#43362A" opacity=".35"/><rect x="253" y="248" width="10" height="2.5" fill="#43362A" opacity=".35"/>
+          <rect x="244" y="164" width="32" height="208" rx="2" fill="url(#lombada)"/>
+        </g>
+        <g>
+          <rect x="278" y="210" width="28" height="162" rx="2" fill="#9C7856"/>
+          <rect x="278" y="226" width="28" height="4" fill="#FCF8F1"/><rect x="278" y="234" width="28" height="2" fill="#FCF8F1"/>
+          <rect x="278" y="350" width="28" height="4" fill="#FCF8F1"/>
+          <rect x="278" y="210" width="28" height="162" rx="2" fill="url(#lombada)"/>
+        </g>
+        <g>
+          <rect x="308" y="156" width="36" height="216" rx="2" fill="#256F47"/>
+          <rect x="308" y="172" width="36" height="4" fill="#CC9A52"/><rect x="308" y="180" width="36" height="2" fill="#CC9A52"/>
+          <rect x="308" y="350" width="36" height="4" fill="#CC9A52"/>
+          <path d="M326 262c0-11 5-18 13-20-1 10-6 17-13 20z" fill="#CC9A52"/>
+          <path d="M326 262v8" stroke="#CC9A52" stroke-width="1.6" stroke-linecap="round"/>
+          <rect x="308" y="156" width="36" height="216" rx="2" fill="url(#lombada)"/>
+        </g>
+
+        <!-- Livro inclinado, apoiado no vizinho -->
+        <g transform="rotate(-13 388 372)">
+          <rect x="388" y="176" width="30" height="196" rx="2" fill="#8A4F2F"/>
+          <rect x="388" y="192" width="30" height="4" fill="#F5E7D0"/><rect x="388" y="200" width="30" height="2" fill="#F5E7D0"/>
+          <rect x="388" y="350" width="30" height="4" fill="#F5E7D0"/>
+          <rect x="393" y="240" width="20" height="34" rx="2" fill="#F7EFE2" opacity=".92"/>
+          <rect x="388" y="176" width="30" height="196" rx="2" fill="url(#lombada)"/>
+        </g>
+
+        <!-- Pilha deitada -->
+        <rect x="424" y="348" width="72" height="24" rx="2" fill="#1F5C3C"/>
+        <rect x="432" y="348" width="3" height="24" fill="#CC9A52"/><rect x="485" y="348" width="3" height="24" fill="#CC9A52"/>
+        <rect x="428" y="328" width="64" height="20" rx="2" fill="#E2CFAE"/>
+        <rect x="436" y="328" width="3" height="20" fill="#A3613A"/><rect x="481" y="328" width="3" height="20" fill="#A3613A"/>
+        <rect x="426" y="310" width="68" height="18" rx="2" fill="#B37F3A"/>
+        <rect x="434" y="310" width="3" height="18" fill="#1F5C3C"/><rect x="483" y="310" width="3" height="18" fill="#1F5C3C"/>
+
+        <!-- Vaso com planta: o verde da marca brotando da estante -->
+        <path d="M460 282c-12-24-14-50-2-70 12 22 13 48 2 70z" fill="#2F8757"/>
+        <path d="M460 282c10-20 28-32 46-32-6 20-24 32-46 32z" fill="#50A574"/>
+        <path d="M460 282c-12-14-30-20-46-16 10 15 29 20 46 16z" fill="#256F47"/>
+        <path d="M459 280c-1-20-1-40-1-58" stroke="#1A4A31" stroke-width="1.2" opacity=".45" fill="none"/>
+        <path d="M442 291h40l-5 19h-30z" fill="#A3613A"/>
+        <rect x="436" y="282" width="48" height="9" rx="3" fill="#8A4F2F"/>
+
+        <!-- Prateleira -->
+        <ellipse cx="292" cy="424" rx="210" ry="8" fill="#133826" opacity=".08"/>
+        <rect x="120" y="387" width="10" height="26" fill="#6A4D34"/>
+        <rect x="454" y="387" width="10" height="26" fill="#6A4D34"/>
+        <rect x="72" y="372" width="440" height="15" rx="3" fill="#7A5A3E"/>
+        <rect x="72" y="372" width="440" height="4" rx="2" fill="#9A7652"/>
+
+        <!-- Brilhos -->
+        <g class="flutuar" fill="#B37F3A">
+          <path d="M150 85q0 11 11 11-11 0-11 11 0-11-11-11 11 0 11-11z"/>
+          <path d="M500 173q0 7 7 7-7 0-7 7 0-7-7-7 7 0 7-7z"/>
+          <path d="M64 206q0 8 8 8-8 0-8 8 0-8-8-8 8 0 8-8z"/>
+          <path d="M232 52q0 6 6 6-6 0-6 6 0-6-6-6 6 0 6-6z"/>
+        </g>
+      </svg>
+    </div>
   </div>
 </section>
+{{end}}
 
-<!-- Categorias -->
-<section class="max-w-6xl mx-auto px-4 pt-8">
-  <div class="flex flex-wrap gap-2">
+<!-- ═══════════════════════════ ACERVO ═══════════════════════════ -->
+<section id="acervo" class="max-w-7xl mx-auto px-4 scroll-mt-40 {{if $filtrando}}pt-14{{else}}pt-6{{end}}">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium">
+      <span class="text-caramelo-500">✦</span> O acervo
+    </p>
+    <h2 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">
+      {{if .Search}}Resultados para <em class="italic text-musgo-600">“{{.Search}}”</em>
+      {{else if $catAtiva}}{{.SelectedCat}}{{if .Estado}} <span class="text-caramelo-500">·</span> <em class="italic text-musgo-600">{{if eq .Estado "usado"}}usados{{else if eq .Estado "digital"}}digitais{{else}}novos{{end}}</em>{{end}}
+      {{else if .Estado}}Livros <em class="italic text-musgo-600">{{if eq .Estado "usado"}}usados{{else if eq .Estado "digital"}}digitais{{else}}novos{{end}}</em>
+      {{else}}Nossa estante{{end}}
+    </h2>
+    {{if and .Estado (not .Search)}}
+    <p class="text-cafe-600 mt-3">{{if eq .Estado "usado"}}Exemplares de segunda mão, cada um com uma história a mais.{{else if eq .Estado "digital"}}Para ler na tela, de autores independentes e novas vozes. Download logo após o pagamento.{{else}}Exemplares novos, direto da prateleira do vendedor.{{end}}</p>
+    {{end}}
+    {{$n := len .Products}}
+    <p class="text-cafe-500 mt-3">{{$n}} {{if eq $n 1}}título encontrado{{else}}títulos encontrados{{end}}</p>
+    <p class="text-xs text-cafe-400 mt-1">Livros de vendedores com melhor reputação e envio rápido aparecem primeiro.</p>
+    <div class="ornamento max-w-xs mx-auto mt-6 text-lg" aria-hidden="true"><span>❦</span></div>
+  </header>
+
+  <!-- Gêneros, como marcadores de página -->
+  <nav class="mt-8 flex flex-wrap justify-center gap-2.5" aria-label="Gêneros">
     {{range .Categories}}
-    <a href="/?categoria={{.}}"
-       class="px-4 py-1.5 rounded-full text-sm font-medium border transition
-              {{if eq . $.SelectedCat}}bg-forest-700 text-white border-forest-700{{else}}bg-white text-gray-600 border-gray-300 hover:border-forest-500 hover:text-forest-700{{end}}">
+    {{$ativo := or (eq . $.SelectedCat) (and (eq . "Todos") (not $.SelectedCat))}}
+    <a href="/?categoria={{.}}{{with $.Estado}}&estado={{.}}{{end}}#acervo"
+       class="px-5 py-2 rounded-full text-sm border transition
+              {{if $ativo}}bg-musgo-800 text-papel-50 border-musgo-800 shadow-sm{{else}}bg-white/60 text-cafe-600 border-papel-300 hover:border-musgo-500 hover:text-musgo-800{{end}}"
+       {{if $ativo}}aria-current="page"{{end}}>
       {{.}}
     </a>
     {{end}}
-  </div>
-</section>
+  </nav>
 
-<!-- Grid de Produtos -->
-<section class="max-w-6xl mx-auto px-4 py-8">
-  {{if not .Products}}
-    <div class="text-center py-20 text-gray-400">
-      <p class="text-5xl mb-4">😕</p>
-      <p class="text-xl font-medium">Nenhum produto encontrado.</p>
+  <!-- Estado do exemplar: combina com o gênero escolhido acima -->
+  <div class="mt-5 flex justify-center">
+    <div class="inline-flex flex-wrap justify-center items-center gap-1 rounded-full bg-papel-100 border border-papel-300 p-1 text-sm" role="group" aria-label="Formato e estado">
+      <a href="/{{if $catAtiva}}?categoria={{.SelectedCat}}{{end}}#acervo"
+         class="px-4 py-1.5 rounded-full transition {{if not .Estado}}bg-white text-musgo-800 shadow-sm{{else}}text-cafe-600 hover:text-musgo-800{{end}}">Todos</a>
+      <a href="/?{{if $catAtiva}}categoria={{.SelectedCat}}&{{end}}estado=novo#acervo"
+         class="px-4 py-1.5 rounded-full transition {{if eq .Estado "novo"}}bg-white text-musgo-800 shadow-sm{{else}}text-cafe-600 hover:text-musgo-800{{end}}">Novos</a>
+      <a href="/?{{if $catAtiva}}categoria={{.SelectedCat}}&{{end}}estado=usado#acervo"
+         class="px-4 py-1.5 rounded-full transition {{if eq .Estado "usado"}}bg-white text-musgo-800 shadow-sm{{else}}text-cafe-600 hover:text-musgo-800{{end}}">Usados</a>
+      <a href="/?{{if $catAtiva}}categoria={{.SelectedCat}}&{{end}}estado=digital#acervo"
+         class="px-4 py-1.5 rounded-full transition {{if eq .Estado "digital"}}bg-white text-musgo-800 shadow-sm{{else}}text-cafe-600 hover:text-musgo-800{{end}}">E-books</a>
     </div>
+  </div>
+
+  {{if not .Products}}
+  <div class="text-center py-24">
+    <svg class="w-24 h-24 mx-auto text-musgo-300" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 16h16a8 8 0 0 1 8 8v28a6 6 0 0 0-6-6H8z"/>
+      <path d="M56 16H40a8 8 0 0 0-8 8v28a6 6 0 0 1 6-6h18z"/>
+    </svg>
+    <p class="font-serif text-3xl text-musgo-900 mt-6">Nenhum livro nesta estante… ainda.</p>
+    <p class="text-cafe-500 mt-2">Tente outra busca ou explore o acervo completo.</p>
+    <div class="mt-8 flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
+      <a href="/#acervo" class="inline-block bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-7 py-3 rounded-full font-medium transition">
+        Ver todos os livros
+      </a>
+      <a href="/vendedor/cadastro" class="text-canela-700 font-medium border-b-2 border-caramelo-300 pb-0.5 hover:border-canela-600 transition">
+        Tem desses em casa? Venda aqui
+      </a>
+    </div>
+  </div>
   {{else}}
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 items-start">
+  <div class="grade-livros mt-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-12">
     {{range .Products}}
-    <div class="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden group border border-stone-100">
-      <a href="/produto?id={{.ID}}">
-        <div class="bg-stone-100 overflow-hidden">
-          <img src="{{.ImageURL}}" alt="{{.Name}}"
-               class="w-full h-auto block group-hover:scale-105 transition duration-300"
-               onerror="this.src='/static/img/placeholder.svg'"/>
+    <article class="livro group surgir flex flex-col">
+      <a href="/produto?id={{.ID}}" class="block" tabindex="-1" aria-hidden="true">
+        <div class="livro-capa aspect-[2/3]">
+          {{template "capa" .}}
+          {{if .IsDigital}}
+          <span class="absolute top-3 right-3 inline-flex items-center gap-1 bg-cafe-900/85 text-papel-50 text-[11px] tracking-wide uppercase px-2.5 py-1 rounded-full">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M9 7h6M9 11h6"/></svg>
+            E-book
+          </span>
+          {{else if eq .Stock 0}}
+          <span class="absolute top-3 right-3 bg-cafe-800/90 text-papel-50 text-[11px] tracking-wide uppercase px-2.5 py-1 rounded-full">Esgotado</span>
+          {{else if le .Stock 3}}
+          <span class="absolute top-3 right-3 bg-canela-500 text-white text-[11px] tracking-wide uppercase px-2.5 py-1 rounded-full shadow">Últimos</span>
+          {{end}}
         </div>
       </a>
-      <div class="p-3">
-        <span class="text-xs text-forest-600 font-semibold uppercase tracking-wide">{{.Category}}</span>
-        <a href="/produto?id={{.ID}}">
-          <h3 class="font-semibold text-gray-800 mt-0.5 line-clamp-2 hover:text-shell-600 transition text-sm">{{.Name}}</h3>
-        </a>
-        <p class="text-lg font-bold text-shell-600 mt-1">{{.FormattedPrice}}</p>
-        <form action="/carrinho/add" method="post" class="mt-2">
-          <input type="hidden" name="id" value="{{.ID}}"/>
-          <input type="hidden" name="qty" value="1"/>
-          <button class="w-full bg-shell-500 hover:bg-shell-600 text-white py-2 rounded-xl text-sm font-semibold transition">
-            Adicionar ao Carrinho
-          </button>
-        </form>
+      <div class="pt-4 px-0.5 flex-1 flex flex-col">
+        <p class="text-[11px] tracking-[.18em] uppercase text-musgo-600 font-medium">
+          {{.Category}}{{if .IsDigital}} <span class="text-cafe-600">· E-book</span>{{else if eq .Condition "usado"}} <span class="text-canela-600">· Usado</span>{{else if eq .Condition "novo"}} <span class="text-cafe-400">· Novo</span>{{end}}
+        </p>
+        <h3 class="font-serif text-[1.15rem] leading-snug text-cafe-900 mt-1.5 line-clamp-2">
+          <a href="/produto?id={{.ID}}" class="hover:text-musgo-700 transition">{{.Name}}</a>
+        </h3>
+        {{if .Author}}<p class="text-[13px] italic text-cafe-600 mt-0.5 truncate"><a href="{{.AuthorURL}}" class="hover:text-musgo-700 transition">{{.Author}}</a></p>{{end}}
+        <p class="text-xs text-cafe-500 mt-1 truncate">
+          {{if .SoldBySite}}Vendido pelo <span class="text-musgo-700 font-medium">Livredo</span>
+          {{else}}por {{.SellerLabel}}{{with .SellerKind}} <span class="text-cafe-400">· {{.}}</span>{{end}}{{end}}
+          {{if .FastShipper}}<span class="block text-[11px] text-musgo-700 font-medium mt-0.5">⚡ Envio Rápido</span>{{end}}
+        </p>
+        <div class="flex items-center justify-between gap-2 mt-auto pt-3">
+          <p class="font-serif text-xl text-canela-600">{{.FormattedPrice}}</p>
+          {{if .Available}}
+          <form action="/carrinho/add" method="post">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+            <input type="hidden" name="id" value="{{.ID}}"/>
+            <input type="hidden" name="qty" value="1"/>
+            <button class="w-10 h-10 rounded-full border border-musgo-700 text-musgo-800 grid place-items-center hover:bg-musgo-800 hover:text-papel-50 hover:border-musgo-800 transition"
+                    title="Colocar na sacola" aria-label="Colocar {{.Name}} na sacola">
+              <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M12 12v5M9.5 14.5h5"/></svg>
+            </button>
+          </form>
+          {{end}}
+        </div>
       </div>
-    </div>
+    </article>
     {{end}}
   </div>
   {{end}}
+</section>
+
+<!-- ═══════════════════════════ VENDA SEUS LIVROS ═══════════════════════════ -->
+<section class="max-w-7xl mx-auto px-4 mt-28">
+  <div class="relative overflow-hidden rounded-[2rem] bg-musgo-800 text-papel-50 px-8 py-14 md:px-16 md:py-16">
+    <div class="pointer-events-none absolute -right-16 -top-20 w-72 h-72 rounded-full border border-caramelo-400/25"></div>
+    <div class="pointer-events-none absolute -right-4 -top-8 w-48 h-48 rounded-full border border-caramelo-400/20"></div>
+    <svg class="pointer-events-none absolute -right-6 -bottom-10 w-72 h-72 text-musgo-700/70" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 16h16a8 8 0 0 1 8 8v28a6 6 0 0 0-6-6H8z"/>
+      <path d="M56 16H40a8 8 0 0 0-8 8v28a6 6 0 0 1 6-6h18z"/>
+      <path d="M32 22c0-8 4.5-13.5 12-15-1.2 8-5.5 12.8-12 15z"/>
+    </svg>
+
+    <div class="relative grid md:grid-cols-[1.5fr_1fr] gap-10 items-center">
+      <div>
+        <p class="text-[12px] tracking-[.25em] uppercase text-caramelo-300">✦ Para quem vende</p>
+        <h2 class="font-serif text-4xl md:text-5xl leading-tight mt-4">
+          Tem livros parados na estante?
+          <em class="italic text-caramelo-300">Dê a eles uma nova história.</em>
+        </h2>
+        <p class="mt-5 text-papel-200/90 max-w-lg leading-relaxed">
+          Crie sua conta de vendedor, cadastre seus exemplares com foto e acompanhe cada pedido pelo seu painel.
+        </p>
+      </div>
+      <div class="md:justify-self-end">
+        <a href="/vendedor/cadastro" class="inline-flex items-center gap-2 bg-papel-50 hover:bg-white text-musgo-900 px-7 py-4 rounded-full font-medium shadow-lg transition">
+          Quero vender meus livros
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
 </section>
 {{end}}

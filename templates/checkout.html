@@ -1,73 +1,265 @@
 {{template "layout" .}}
 
-{{define "title"}}Checkout - MinhaLoja{{end}}
+{{define "title"}}Finalizar pedido — Livredo{{end}}
+
+{{define "script_frete"}}
+<script>
+(function () {
+  var cep = document.getElementById('cep'), botao = document.getElementById('calcular-frete');
+  var aviso = document.getElementById('frete-aviso'), lista = document.getElementById('opcoes-frete');
+  var resumoFrete = document.getElementById('resumo-frete'), total = document.getElementById('resumo-total');
+  var cpf = document.getElementById('cpf'), blocoCpf = document.getElementById('bloco-cpf');
+  var subtotal = parseInt(total.getAttribute('data-subtotal'), 10) || 0;
+  var reais = function (c) { return 'R$ ' + (c / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
+  function mostrarAviso(texto, erro) {
+    aviso.textContent = texto;
+    aviso.className = 'text-sm rounded-xl px-4 py-3 ' + (erro ? 'bg-canela-50 border border-canela-200 text-canela-800' : 'bg-camurca-100 border border-camurca-200 text-musgo-800');
+  }
+  function atualizarTotal(cents, rotulo) {
+    resumoFrete.textContent = rotulo;
+    total.textContent = reais(subtotal + cents);
+  }
+  function calcular() {
+    var digitos = cep.value.replace(/\D/g, '');
+    if (digitos.length !== 8) { mostrarAviso('Informe um CEP com 8 dígitos.', true); return; }
+    botao.disabled = true; botao.textContent = 'Calculando…';
+    fetch('/frete/cotar?cep=' + digitos, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        aviso.className = 'hidden'; lista.innerHTML = ''; lista.className = 'hidden space-y-2';
+        if (d.endereco) {
+          [['rua', d.endereco.rua], ['bairro', d.endereco.bairro], ['cidade', d.endereco.cidade], ['uf', d.endereco.uf]].forEach(function (p) {
+            var el = document.getElementById(p[0]); if (el && p[1]) el.value = p[1];
+          });
+          document.getElementById('numero').focus();
+        } else if (d.aviso) { mostrarAviso(d.aviso, false); }
+        if (d.combinado) {
+          // Sem cotação: o frete é combinado com o vendedor e não vai etiqueta pelo site.
+          mostrarAviso('O frete deste vendedor é combinado diretamente com ele depois da compra.', false);
+          blocoCpf.style.display = 'none'; cpf.required = false;
+          atualizarTotal(0, 'a combinar');
+          return;
+        }
+        blocoCpf.style.display = ''; cpf.required = true;
+        if (d.erro) { mostrarAviso(d.erro, true); atualizarTotal(0, 'calcule pelo CEP'); return; }
+        (d.opcoes || []).forEach(function (o, i) {
+          var label = document.createElement('label');
+          label.className = 'flex items-center gap-3 rounded-xl border border-papel-300 bg-papel-50 px-4 py-3 cursor-pointer hover:border-musgo-500 has-[:checked]:border-musgo-600 has-[:checked]:bg-musgo-50 transition';
+          var input = document.createElement('input');
+          input.type = 'radio'; input.name = 'frete'; input.value = o.id; input.required = true; input.className = 'accent-[#1F5C3C]';
+          var cents = Math.round(parseFloat(o.preco.replace(/[^\d,]/g, '').replace(',', '.')) * 100);
+          input.addEventListener('change', function () { atualizarTotal(cents, o.preco); });
+          var texto = document.createElement('span');
+          texto.className = 'flex-1 text-sm text-cafe-800';
+          texto.textContent = o.nome;
+          var prazo = document.createElement('span');
+          prazo.className = 'block text-xs text-cafe-500';
+          prazo.textContent = o.prazo ? 'até ' + o.prazo + ' dias úteis após a postagem' : '';
+          texto.appendChild(prazo);
+          var preco = document.createElement('span');
+          preco.className = 'font-medium text-cafe-800'; preco.textContent = o.preco;
+          label.appendChild(input); label.appendChild(texto); label.appendChild(preco);
+          lista.appendChild(label);
+          if (i === 0) { input.checked = true; atualizarTotal(cents, o.preco); }
+        });
+        lista.className = 'space-y-2';
+      })
+      .catch(function () { mostrarAviso('Não foi possível calcular o frete agora. Tente de novo.', true); })
+      .then(function () { botao.disabled = false; botao.textContent = 'Calcular frete'; });
+  }
+  botao.addEventListener('click', calcular);
+  cep.addEventListener('change', calcular);
+  cep.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calcular(); } });
+})();
+</script>
+{{end}}
 
 {{define "content"}}
-<div class="max-w-5xl mx-auto px-4 py-10">
-  <h1 class="text-3xl font-bold text-gray-800 mb-8">Finalizar Pedido</h1>
+<div class="max-w-6xl mx-auto px-4 pt-12">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Quase lá</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Finalizar pedido</h1>
+    <div class="ornamento max-w-xs mx-auto mt-6 text-lg" aria-hidden="true"><span>❦</span></div>
+  </header>
 
-  <div class="grid md:grid-cols-3 gap-8">
-    <!-- Formulário -->
-    <div class="md:col-span-2">
-      <form action="/checkout" method="post" class="bg-white rounded-2xl shadow p-6 space-y-5 border border-stone-100">
-        <h2 class="text-lg font-semibold text-forest-700 border-b border-stone-200 pb-2">Seus Dados</h2>
+  <div class="mt-12 grid lg:grid-cols-[1fr_22rem] gap-10 items-start">
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
-          <input type="text" name="nome" required
-                 class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"
-                 placeholder="João da Silva"/>
-        </div>
+    {{with .Aviso}}
+    <div class="mb-8 rounded-xl bg-canela-50 border border-canela-200 px-4 py-3 text-sm text-canela-800">{{.}}</div>
+    {{end}}
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form action="/checkout" method="post" class="space-y-10">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
+
+      <!-- 1. Dados -->
+      <section class="rounded-2xl bg-white/75 border border-papel-300 p-7">
+        <h2 class="flex items-center gap-3 font-serif text-2xl text-musgo-950">
+          <span class="w-8 h-8 rounded-full bg-musgo-800 text-papel-50 grid place-items-center text-sm font-sans">1</span>
+          Seus dados
+        </h2>
+
+        {{if not .Customer}}
+        <p class="mt-5 rounded-xl bg-camurca-100 border border-camurca-200 px-4 py-3 text-sm text-musgo-800">
+          Já tem conta? <a href="/conta/entrar" class="font-medium underline decoration-caramelo-400 underline-offset-4 hover:text-musgo-600">Entre</a> para preencher seus dados automaticamente.
+        </p>
+        {{end}}
+
+        <div class="mt-6 space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
-            <input type="email" name="email" required
-                   class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"
-                   placeholder="joao@email.com"/>
+            <label for="nome" class="block text-sm text-cafe-600 mb-1.5">Nome completo</label>
+            <input id="nome" type="text" name="nome" required autocomplete="name" value="{{if .Customer}}{{.Customer.Name}}{{end}}"
+                   class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"
+                   placeholder="Como está no seu documento"/>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-            <input type="tel" name="telefone"
-                   class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"
-                   placeholder="(11) 99999-9999"/>
+
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label for="email" class="block text-sm text-cafe-600 mb-1.5">E-mail</label>
+              <input id="email" type="email" name="email" required autocomplete="email" value="{{if .Customer}}{{.Customer.Email}}{{end}}"
+                     class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"
+                     placeholder="voce@email.com"/>
+            </div>
+            <div>
+              <label for="telefone" class="block text-sm text-cafe-600 mb-1.5">Telefone <span class="text-cafe-400">(opcional)</span></label>
+              <input id="telefone" type="tel" name="telefone" autocomplete="tel" value="{{if .Customer}}{{.Customer.Phone}}{{end}}"
+                     class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"
+                     placeholder="(11) 99999-9999"/>
+            </div>
           </div>
+
+          {{if .PrecisaEndereco}}
+          <div id="entrega" class="space-y-4 border-t border-papel-300 pt-6">
+            <div class="flex items-center justify-between gap-3">
+              <p class="font-serif text-xl text-musgo-950">Entrega</p>
+              {{with .QuemEnvia}}
+              <p class="inline-flex items-center gap-1.5 text-xs text-cafe-600">
+                <svg class="w-4 h-4 text-caramelo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9"/></svg>
+                Envio feito por <strong class="font-medium text-cafe-800">{{.}}</strong>
+              </p>
+              {{end}}
+            </div>
+            <div class="grid grid-cols-[1fr_auto] gap-3 items-end">
+              <div>
+                <label for="cep" class="block text-sm text-cafe-600 mb-1.5">CEP</label>
+                <input id="cep" name="cep" required inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000"
+                       class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/>
+              </div>
+              <button type="button" id="calcular-frete" class="h-[50px] px-5 rounded-xl border border-musgo-700 text-musgo-800 hover:bg-musgo-50 font-medium transition">Calcular frete</button>
+            </div>
+            <p id="frete-aviso" class="hidden text-sm rounded-xl px-4 py-3"></p>
+            <fieldset id="opcoes-frete" class="hidden space-y-2" aria-label="Opções de frete"></fieldset>
+            <div class="grid sm:grid-cols-[2fr_1fr] gap-3">
+              <div><label for="rua" class="block text-sm text-cafe-600 mb-1.5">Rua</label>
+                <input id="rua" name="rua" required maxlength="120" autocomplete="address-line1" class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/></div>
+              <div><label for="numero" class="block text-sm text-cafe-600 mb-1.5">Número</label>
+                <input id="numero" name="numero" required maxlength="20" class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/></div>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div><label for="complemento" class="block text-sm text-cafe-600 mb-1.5">Complemento <span class="text-cafe-400">(opcional)</span></label>
+                <input id="complemento" name="complemento" maxlength="120" autocomplete="address-line2" class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/></div>
+              <div><label for="bairro" class="block text-sm text-cafe-600 mb-1.5">Bairro</label>
+                <input id="bairro" name="bairro" required maxlength="120" class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/></div>
+            </div>
+            <div class="grid grid-cols-[3fr_1fr] gap-3">
+              <div><label for="cidade" class="block text-sm text-cafe-600 mb-1.5">Cidade</label>
+                <input id="cidade" name="cidade" required maxlength="120" autocomplete="address-level2" class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/></div>
+              <div><label for="uf" class="block text-sm text-cafe-600 mb-1.5">UF</label>
+                <input id="uf" name="uf" required maxlength="2" autocomplete="address-level1" class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition uppercase"/></div>
+            </div>
+            <div id="bloco-cpf">
+              <label for="cpf" class="block text-sm text-cafe-600 mb-1.5">CPF</label>
+              <input id="cpf" name="cpf" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" class="w-full bg-papel-50 border border-papel-300 rounded-xl px-4 py-3 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/>
+              <p class="text-xs text-cafe-400 mt-1">Vai só na etiqueta de envio, que os Correios exigem. Não fica visível na loja.</p>
+            </div>
+          </div>
+          {{end}}
+          {{if .TemDigital}}
+          <p class="flex items-start gap-2.5 rounded-xl bg-camurca-100 border border-camurca-200 px-4 py-3 text-sm text-musgo-800">
+            <svg class="w-5 h-5 shrink-0 text-musgo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5h6a3 3 0 0 1 3 3V20a2 2 0 0 0-2-2H3z"/><path d="M21 5.5h-6a3 3 0 0 0-3 3V20a2 2 0 0 1 2-2h7z"/></svg>
+            <span>{{if .PrecisaEndereco}}Os livros digitais{{else}}Seus livros digitais{{end}} ficam em <strong class="font-medium">Minha biblioteca</strong> assim que o pagamento for confirmado. Não há frete nem espera.</span>
+          </p>
+          {{end}}
+        </div>
+      </section>
+
+      <!-- 2. Pagamento -->
+      <section class="rounded-2xl bg-white/75 border border-papel-300 p-7">
+        <h2 class="flex items-center gap-3 font-serif text-2xl text-musgo-950">
+          <span class="w-8 h-8 rounded-full bg-musgo-800 text-papel-50 grid place-items-center text-sm font-sans">2</span>
+          Forma de pagamento
+        </h2>
+
+        <div class="mt-6 grid sm:grid-cols-2 gap-4">
+          <label class="relative flex items-start gap-3 rounded-xl border border-papel-300 bg-papel-50 p-5 cursor-pointer hover:border-musgo-400 transition has-[:checked]:border-musgo-600 has-[:checked]:bg-musgo-50 has-[:checked]:ring-1 has-[:checked]:ring-musgo-600">
+            <input type="radio" name="metodo_pagamento" value="pix" checked class="mt-1 accent-[#1F5C3C]"/>
+            <span>
+              <span class="block font-medium text-cafe-900">PIX</span>
+              <span class="block text-sm text-cafe-500 mt-1 leading-relaxed">QR Code na hora. O pedido é liberado assim que o pagamento cai.</span>
+            </span>
+          </label>
+
+          <label class="relative flex items-start gap-3 rounded-xl border border-papel-300 bg-papel-50 p-5 cursor-pointer hover:border-musgo-400 transition has-[:checked]:border-musgo-600 has-[:checked]:bg-musgo-50 has-[:checked]:ring-1 has-[:checked]:ring-musgo-600">
+            <input type="radio" name="metodo_pagamento" value="cartao" class="mt-1 accent-[#1F5C3C]"/>
+            <span>
+              <span class="block font-medium text-cafe-900">Cartão ou boleto</span>
+              <span class="block text-sm text-cafe-500 mt-1 leading-relaxed">
+                {{with .Parcelas}}Em até <strong class="font-medium text-cafe-800">{{.Installments}}x de {{brl .Amount}}</strong>{{if .InterestFree}} sem juros{{else}} (com juros, total {{brl .Total}}){{end}}.
+                {{else}}Pagamento à vista no cartão ou boleto.{{end}}
+                Você escolhe as parcelas na página segura do Mercado Pago, onde também pode usar um cartão salvo na sua conta de lá.
+              </span>
+            </span>
+          </label>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Endereço Completo *</label>
-          <textarea name="endereco" required rows="3"
-                    class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-shell-400"
-                    placeholder="Rua, número, bairro, cidade - UF, CEP"></textarea>
-        </div>
+        <p class="mt-5 flex items-start gap-2.5 text-xs text-cafe-500 leading-relaxed">
+          <svg class="w-4 h-4 text-caramelo-500 shrink-0 mt-px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          O pagamento é processado pelo Mercado Pago. Esta loja não recebe nem armazena os dados do seu cartão.
+        </p>
+      </section>
 
-        <div class="bg-shell-50 border border-shell-200 rounded-xl p-4 text-sm text-shell-700">
-          💳 Você será redirecionado ao InfinitPay para realizar o pagamento com segurança.
-        </div>
-
-        <button type="submit"
-                class="w-full bg-shell-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-shell-600 transition shadow-md">
-          💳 Ir para o Pagamento
-        </button>
-      </form>
-    </div>
+      <label class="flex items-start gap-2.5 text-sm text-cafe-700 mb-4">
+        <input type="checkbox" name="aceite_termos" required class="mt-0.5 w-4 h-4 accent-[#1F5C3C] shrink-0"/>
+        <span>Li e aceito os <a href="/termos" target="_blank" class="text-musgo-800 underline">Termos de Uso</a> e a
+          <a href="/privacidade" target="_blank" class="text-musgo-800 underline">Política de Privacidade</a>. Meus dados de entrega serão
+          compartilhados com o vendedor e com o Mercado Pago para concluir esta compra.</span>
+      </label>
+      <button type="submit"
+              class="w-full inline-flex items-center justify-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 py-4 rounded-full text-lg font-medium shadow-sm transition">
+        Ir para o pagamento
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </button>
+    </form>
 
     <!-- Resumo -->
-    <div class="bg-white rounded-2xl shadow p-6 h-fit border border-stone-100">
-      <h2 class="text-lg font-semibold text-forest-700 border-b border-stone-200 pb-2 mb-4">Resumo do Pedido</h2>
-      <div class="space-y-3">
+    <aside class="lg:sticky lg:top-40 rounded-2xl bg-white/75 border border-papel-300 p-7 shadow-[0_20px_40px_-30px_rgba(48,34,22,.6)]">
+      <h2 class="font-serif text-2xl text-musgo-950">Seu pedido</h2>
+      <ul class="mt-5 space-y-4">
         {{range .Cart.Items}}
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-600">{{.Product.Name}} × {{.Quantity}}</span>
-          <span class="font-semibold">{{.FormattedSubtotal}}</span>
-        </div>
+        <li class="flex gap-3">
+          <div class="livro-capa aspect-[2/3] w-12 shrink-0">
+            {{template "capa" .Product}}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-serif text-cafe-900 leading-snug line-clamp-2">{{.Product.Name}}</p>
+            <p class="text-xs text-cafe-500 mt-1">{{with .EditionLabel}}{{.}} · {{end}}{{.Quantity}} × {{.FormattedUnitPrice}}</p>
+          </div>
+          <p class="text-sm text-cafe-700 whitespace-nowrap">{{.FormattedSubtotal}}</p>
+        </li>
         {{end}}
+      </ul>
+      <div class="ornamento my-6" aria-hidden="true"><span class="text-sm">✦</span></div>
+      {{if .PrecisaEndereco}}
+      <div class="flex items-baseline justify-between text-sm mb-3">
+        <span class="text-cafe-600">Frete</span>
+        <span id="resumo-frete" class="text-cafe-700">calcule pelo CEP</span>
       </div>
-      <div class="border-t border-stone-200 mt-4 pt-4 flex justify-between">
-        <span class="font-semibold text-gray-700">Total</span>
-        <span class="text-xl font-bold text-shell-600">{{.Cart.FormattedTotal}}</span>
+      {{end}}
+      <div class="flex items-baseline justify-between">
+        <span class="text-cafe-700">Total</span>
+        <span id="resumo-total" data-subtotal="{{.Cart.TotalCents}}" class="font-serif text-3xl text-canela-600">{{.Cart.FormattedTotal}}</span>
       </div>
-    </div>
+    </aside>
   </div>
 </div>
+{{if .PrecisaEndereco}}{{template "script_frete"}}{{end}}
 {{end}}

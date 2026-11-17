@@ -1,0 +1,225 @@
+{{/*
+  Catálogo em massa, igual nos painéis do vendedor e do admin. .Base é
+  "/vendedor" ou "/admin".
+*/}}
+
+{{define "importar_conteudo"}}
+{{$b := .Base}}
+<div class="max-w-6xl space-y-5">
+  {{with .Erro}}<div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{.}}</div>{{end}}
+
+  {{with .Lote}}
+  {{if .Stale}}
+  <div class="rounded-xl bg-caramelo-100 border border-caramelo-300 px-4 py-3 text-sm text-canela-800">
+    O processamento desta planilha foi interrompido. <a href="{{$b}}/importar" class="underline font-medium">Envie a planilha de novo</a>.
+  </div>
+  {{else if or (eq .Status "processando") (eq .Status "publicando")}}
+  <section class="bg-white rounded-xl shadow p-6 border border-stone-100">
+    <h2 class="font-semibold text-forest-800">{{if eq .Status "processando"}}Lendo a planilha e buscando os ISBNs…{{else}}Publicando os livros e baixando as capas…{{end}}</h2>
+    <div class="mt-4 h-3 rounded-full bg-stone-100 overflow-hidden"><div class="h-full bg-forest-700 transition-all" style="width: {{.Percent}}%"></div></div>
+    <p class="text-sm text-gray-500 mt-2">{{.Percent}}% · pode sair desta página, o trabalho continua.</p>
+  </section>
+  <script>setTimeout(function () { location.reload(); }, 2000);</script>
+  {{else}}
+  {{if eq .Status "concluido"}}
+  <section class="bg-white rounded-xl shadow p-6 border border-stone-100">
+    <h2 class="font-semibold text-forest-800">Importação concluída</h2>
+    <div class="mt-3 flex flex-wrap gap-2 text-sm">
+      <span class="px-3 py-1 rounded-full bg-musgo-50 text-musgo-800 border border-musgo-200">{{.Resultado "publicado"}} publicados</span>
+      <span class="px-3 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-200">{{.Resultado "atualizado"}} atualizados</span>
+      {{with .Resultado "falhou"}}<span class="px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">{{.}} falharam</span>{{end}}
+      {{with .ComErro}}<span class="px-3 py-1 rounded-full bg-stone-100 text-gray-600">{{.}} com erro, não enviados</span>{{end}}
+    </div>
+    <div class="mt-4 flex flex-wrap gap-3 text-sm">
+      <a href="{{$b}}/produtos" class="bg-forest-800 hover:bg-forest-700 text-white px-4 py-2 rounded-lg font-medium">Ver meus livros</a>
+      <a href="{{$b}}/importar" class="px-4 py-2 rounded-lg border border-stone-300 text-gray-700 hover:border-forest-500">Importar outra planilha</a>
+    </div>
+  </section>
+  {{else}}
+  <section class="bg-white rounded-xl shadow p-6 border border-stone-100">
+    <h2 class="font-semibold text-forest-800">Prévia: confira antes de publicar</h2>
+    <div class="mt-3 flex flex-wrap gap-2 text-sm">
+      <span class="px-3 py-1 rounded-full bg-musgo-50 text-musgo-800 border border-musgo-200">{{.Novos}} livros novos</span>
+      <span class="px-3 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-200">{{.Atualizar}} atualizações de preço e estoque</span>
+      <span class="px-3 py-1 rounded-full {{if .ComErro}}bg-red-50 text-red-700 border border-red-200{{else}}bg-stone-100 text-gray-500{{end}}">{{.ComErro}} com erro</span>
+    </div>
+    <p class="text-sm text-gray-600 mt-3">
+      Linhas com erro <strong>não são publicadas</strong>: corrija na planilha e envie de novo (só essas linhas, se quiser).
+      Os campos marcados <span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-forest-100 text-forest-800">ISBN</span> foram preenchidos pela busca.
+    </p>
+    <form action="{{$b}}/importar/publicar" method="post" class="mt-4 flex flex-wrap gap-3 items-center">
+      <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+      <input type="hidden" name="lote" value="{{.ID}}"/>
+      <button {{if not .Publicaveis}}disabled{{end}} class="bg-forest-800 hover:bg-forest-700 disabled:opacity-40 text-white px-5 py-2.5 rounded-lg font-medium text-sm">
+        Publicar {{.Publicaveis}} livro(s)
+      </button>
+      <a href="{{$b}}/importar" class="text-sm text-gray-600 hover:underline">Cancelar e enviar outra planilha</a>
+    </form>
+  </section>
+  {{end}}
+
+  <div class="bg-white rounded-xl shadow border border-stone-100 overflow-x-auto">
+    <table class="w-full text-sm min-w-[900px]">
+      <thead class="bg-stone-50 text-xs uppercase text-gray-500">
+        <tr>
+          <th class="text-left px-3 py-2">Linha</th>
+          <th class="px-3 py-2">Capa</th>
+          <th class="text-left px-3 py-2">Livro</th>
+          <th class="text-left px-3 py-2">Categoria</th>
+          <th class="text-right px-3 py-2">Preço</th>
+          <th class="text-right px-3 py-2">Estoque</th>
+          <th class="text-left px-3 py-2 w-72">Situação</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        {{range .Rows}}
+        <tr class="{{if not .Ready}}bg-red-50/50{{else if eq .Status "falhou"}}bg-red-50/50{{end}} align-top">
+          <td class="px-3 py-2 text-gray-400">{{.Line}}</td>
+          <td class="px-3 py-2">
+            {{if .CoverURL}}<img src="{{.CoverURL}}" alt="" loading="lazy" referrerpolicy="no-referrer" class="w-10 h-14 object-cover rounded border border-stone-200 bg-stone-50"/>
+            {{else}}<div class="w-10 h-14 rounded border border-dashed border-stone-300 bg-stone-50"></div>{{end}}
+            {{if .Filled "capa"}}<span class="block mt-1 text-[10px] font-semibold uppercase text-forest-800">ISBN</span>{{end}}
+          </td>
+          <td class="px-3 py-2">
+            <p class="font-medium text-gray-800">{{with .Title}}{{.}}{{else}}<span class="text-red-600">sem título</span>{{end}}
+              {{if .Filled "titulo"}}<span class="ml-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-forest-100 text-forest-800">ISBN</span>{{end}}</p>
+            {{with .Author}}<p class="text-gray-600 italic">{{.}}</p>{{end}}
+            <p class="text-xs text-gray-500">{{with .Publisher}}{{.}}{{end}}{{if and .Publisher .Language}} · {{end}}{{with .Language}}{{.}}{{end}}{{if .ISBN}}{{if or .Publisher .Language}} · {{end}}ISBN {{.ISBN}}{{end}}</p>
+          </td>
+          <td class="px-3 py-2 text-gray-600">{{.Category}}<br/><span class="text-xs">{{if eq .Condition "novo"}}Novo{{else if eq .Condition "usado"}}Usado{{else}}{{.Condition}}{{end}}</span></td>
+          <td class="px-3 py-2 text-right whitespace-nowrap">{{if .Price}}{{brl .Price}}{{else}}{{.PriceText}}{{end}}</td>
+          <td class="px-3 py-2 text-right">{{.Stock}}</td>
+          <td class="px-3 py-2 text-xs">
+            {{if .Status}}
+            <p class="font-medium {{if eq .Status "falhou"}}text-red-700{{else}}text-musgo-700{{end}}">{{.Result}}</p>
+            {{else}}
+            {{range .Errors}}<p class="text-red-700">✕ {{.}}</p>{{end}}
+            {{range .Warnings}}<p class="text-canela-700">• {{.}}</p>{{end}}
+            {{if and .Ready (not .Warnings)}}<p class="text-musgo-700">✓ Pronto</p>{{end}}
+            {{end}}
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  {{else}}
+  <section class="bg-white rounded-xl shadow p-6 border border-stone-100">
+    <h2 class="font-semibold text-forest-800">Cadastre o estoque inteiro de uma vez</h2>
+    <ol class="mt-3 text-sm text-gray-600 space-y-1.5 list-decimal list-inside">
+      <li>Baixe o <a href="{{$b}}/importar/modelo.csv" class="text-shell-600 underline font-medium">modelo de planilha</a> e abra no Excel ou no Google Planilhas.</li>
+      <li>Uma linha por livro. Com o <strong>ISBN</strong>, a loja busca título, autor, editora, idioma, sinopse e capa sozinha.</li>
+      <li>Salve como <strong>CSV</strong> (Excel: Arquivo → Salvar como → CSV; Google: Arquivo → Fazer download → CSV) e envie abaixo.</li>
+      <li>Confira a prévia: nada é publicado antes de você confirmar.</li>
+    </ol>
+    <form action="{{$b}}/importar" method="post" enctype="multipart/form-data" class="mt-5 flex flex-wrap items-center gap-3">
+      <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+      <input type="file" name="planilha" accept=".csv,text/csv,.txt" required
+             class="flex-1 min-w-[16rem] border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-shell-50 file:text-shell-700 file:font-medium"/>
+      <button class="bg-forest-800 hover:bg-forest-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm">Enviar e ver prévia</button>
+    </form>
+    <p class="text-xs text-gray-500 mt-2">Até 1.000 livros e 2 MB por planilha. Para atualizar preço e estoque do que você já vende, use a
+      <a href="{{$b}}/produtos/massa" class="underline">edição em massa</a> ou <a href="{{$b}}/produtos/exportar.csv" class="underline">exporte o catálogo</a>, altere e envie de volta.</p>
+  </section>
+
+  <section class="bg-white rounded-xl shadow border border-stone-100 overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-stone-50 text-xs uppercase text-gray-500"><tr><th class="text-left px-4 py-2">Coluna</th><th class="text-left px-4 py-2">O que vai</th></tr></thead>
+      <tbody class="divide-y divide-stone-100 text-gray-600">
+        <tr><td class="px-4 py-2 font-mono text-xs">isbn</td><td class="px-4 py-2">ISBN-10 ou 13, com ou sem hífens. Preenche o resto sozinho.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">titulo *</td><td class="px-4 py-2">Obrigatório se não houver ISBN encontrado.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">autor, editora, idioma</td><td class="px-4 py-2">Opcionais; o ISBN completa.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">categoria *</td><td class="px-4 py-2">Uma das categorias da loja: {{range $i, $c := .Categorias}}{{if $i}}, {{end}}<strong>{{$c.Name}}</strong>{{end}}.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">estado *</td><td class="px-4 py-2"><strong>novo</strong> ou <strong>usado</strong>.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">preco *</td><td class="px-4 py-2">Como 39,90 (aceita R$ e ponto de milhar).</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">estoque</td><td class="px-4 py-2">Quantidade; em branco vale 1.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">descricao</td><td class="px-4 py-2">Sinopse ou estado de conservação.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">capa_url</td><td class="px-4 py-2">Link da foto da capa (JPEG, PNG ou WebP). Sem link, vale a capa do ISBN ou a capa gerada.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">peso_g, altura_cm, largura_cm, comprimento_cm</td><td class="px-4 py-2">Para o frete; em branco usa o pacote padrão de livro.</td></tr>
+        <tr><td class="px-4 py-2 font-mono text-xs">id</td><td class="px-4 py-2">Só na planilha exportada: atualiza preço e estoque daquele livro.</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <p class="text-xs text-gray-500">E-books continuam no cadastro individual, por causa do arquivo e da declaração de direitos.</p>
+  {{end}}
+</div>
+{{end}}
+
+{{define "massa_conteudo"}}
+{{$b := .Base}}
+<div class="max-w-6xl space-y-4">
+  {{with .Erro}}<div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{.}}</div>{{end}}
+  {{with .Salvos}}<div class="rounded-lg px-4 py-3 text-sm bg-musgo-50 border border-musgo-200 text-musgo-800">Alterações salvas: {{.}} livro(s) mudaram.</div>{{end}}
+  <p class="text-sm text-gray-600">Altere preço, estoque e se o livro está à venda direto na tabela, ou marque vários e aplique uma ação. Nada muda até você salvar.</p>
+
+  <form method="post" action="{{$b}}/produtos/massa" id="massa">
+    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+    <div class="bg-white rounded-xl shadow border border-stone-100 p-4 flex flex-wrap items-center gap-3 sticky top-0 z-10">
+      <input type="search" id="filtro" placeholder="Filtrar por título, autor ou ISBN" class="flex-1 min-w-[12rem] border border-gray-300 rounded-lg px-3 py-2 text-sm"/>
+      <select name="acao" class="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+        <option value="ajuste_preco">Ajustar preço em %</option>
+        <option value="definir_estoque">Definir estoque</option>
+        <option value="somar_estoque">Somar ao estoque</option>
+        <option value="ativar">Colocar à venda</option>
+        <option value="pausar">Pausar (tirar da loja)</option>
+      </select>
+      <input name="valor" placeholder="ex.: -10" class="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm"/>
+      <!-- "Salvar" vem primeiro no HTML: é o botão que o Enter aciona. -->
+      <button name="botao" value="salvar" class="order-last bg-forest-800 hover:bg-forest-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Salvar alterações</button>
+      <button name="botao" value="aplicar" class="bg-shell-500 hover:bg-shell-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Aplicar aos marcados</button>
+    </div>
+
+    <div class="mt-4 bg-white rounded-xl shadow border border-stone-100 overflow-x-auto">
+      <table class="w-full text-sm min-w-[720px]">
+        <thead class="bg-stone-50 text-xs uppercase text-gray-500">
+          <tr>
+            <th class="px-3 py-2 w-8"><input type="checkbox" id="todos" title="Marcar todos os visíveis" class="accent-[#1F5C3C]"/></th>
+            <th class="text-left px-3 py-2">Livro</th>
+            <th class="text-left px-3 py-2 w-36">Preço (R$)</th>
+            <th class="text-left px-3 py-2 w-28">Estoque</th>
+            <th class="px-3 py-2 w-24">À venda</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          {{range .Products}}
+          <tr data-busca="{{.Name}} {{.Author}} {{.ISBN}}">
+            <td class="px-3 py-2"><input type="checkbox" name="sel" value="{{.ID}}" class="accent-[#1F5C3C]"/><input type="hidden" name="ids" value="{{.ID}}"/></td>
+            <td class="px-3 py-2">
+              <div class="flex items-center gap-3">
+                <img src="{{.ImageURL}}" alt="" class="w-9 h-12 object-cover rounded border border-stone-200"/>
+                <div class="min-w-0">
+                  <p class="font-medium text-gray-800 truncate">{{.Name}}</p>
+                  <p class="text-xs text-gray-500 truncate">{{with .Author}}{{.}} · {{end}}{{if .IsDigital}}E-book{{else}}{{.ConditionLabel}}{{end}}{{with .ISBN}} · ISBN {{.}}{{end}}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-3 py-2"><input name="preco_{{.ID}}" value="{{.PriceInput}}" inputmode="decimal" class="w-28 border border-gray-300 rounded-lg px-2 py-1.5"/></td>
+            <td class="px-3 py-2">{{if .IsDigital}}<span class="text-gray-400 text-xs">—</span>{{else}}<input name="estoque_{{.ID}}" value="{{.Stock}}" type="number" min="0" class="w-20 border border-gray-300 rounded-lg px-2 py-1.5"/>{{end}}</td>
+            <td class="px-3 py-2 text-center"><input type="checkbox" name="ativo_{{.ID}}" {{if .Active}}checked{{end}} class="w-4 h-4 accent-[#1F5C3C]"/></td>
+          </tr>
+          {{else}}
+          <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Nenhum livro cadastrado.</td></tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </form>
+</div>
+<script>
+(function () {
+  var filtro = document.getElementById('filtro');
+  var linhas = document.querySelectorAll('#massa tbody tr[data-busca]');
+  function norm(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  filtro.addEventListener('input', function () {
+    var q = norm(filtro.value.trim());
+    linhas.forEach(function (tr) { tr.style.display = !q || norm(tr.dataset.busca).indexOf(q) >= 0 ? '' : 'none'; });
+  });
+  filtro.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });
+  document.getElementById('todos').addEventListener('change', function (e) {
+    linhas.forEach(function (tr) { if (tr.style.display !== 'none') tr.querySelector('input[name="sel"]').checked = e.target.checked; });
+  });
+})();
+</script>
+{{end}}

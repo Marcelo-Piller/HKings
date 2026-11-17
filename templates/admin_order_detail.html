@@ -6,6 +6,9 @@
 <div class="max-w-2xl">
   <a href="/admin/pedidos" class="text-indigo-600 text-sm hover:underline">← Voltar</a>
   <div class="bg-white rounded-xl shadow p-6 mt-4 space-y-5">
+    {{if .Error}}
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{.Error}}</div>
+    {{end}}
     <div class="grid grid-cols-2 gap-4 text-sm">
       <div>
         <p class="text-gray-500">Cliente</p>
@@ -35,21 +38,52 @@
         {{range .Order.Items}}
         <div class="flex justify-between">
           <span>{{.ProductName}} × {{.Quantity}}</span>
-          <span class="font-medium">R$ {{printf "%.2f" .Price}}</span>
+          <span class="font-medium">{{brl .Price}}</span>
         </div>
         {{end}}
       </div>
+      {{if .Order.HasPhysical}}
+      <div class="flex justify-between text-sm mt-2">
+        <span>Frete · {{.Order.ShippingLabel}}</span>
+        <span class="font-medium">{{.Order.FormattedShipping}}</span>
+      </div>
+      {{end}}
       <div class="flex justify-between font-bold text-base mt-3 border-t pt-3">
         <span>Total</span>
         <span class="text-indigo-600">{{.Order.FormattedTotal}}</span>
       </div>
+      <div class="mt-3 text-sm text-gray-600 space-y-1">
+        <div class="flex justify-between"><span>Recebedor</span><span class="font-medium">{{.Recebedor}}</span></div>
+        {{if .Order.SellerID}}
+        <div class="flex justify-between"><span>Comissão do site</span><span class="font-medium text-green-700">{{brl .Order.MarketplaceFee}}</span></div>
+        {{end}}
+        {{with .Order.TrackingCode}}<div class="flex justify-between"><span>Rastreio</span><span class="font-mono">{{.}}</span></div>{{end}}
+      </div>
     </div>
 
+    {{if and .Order.HasPhysical .Despacho}}{{if or (eq .Order.Status "pago") (eq .Order.Status "pronto") (eq .Order.Status "enviado") (eq .Order.Status "entregue")}}
+    <div class="border-t pt-4">
+      <h3 class="font-semibold text-gray-700 mb-3">Despacho</h3>
+      {{if eq .Order.SellerID 0}}
+      {{template "passos_despacho" dict "Order" .Order "D" .Despacho "SLA" .SLA "Acao" (printf "/admin/pedidos/detalhe?id=%d" .Order.ID) "CSRF" .CSRFToken}}
+      {{else}}
+      {{template "passos_despacho" dict "Order" .Order "D" .Despacho "SLA" .SLA "Acao" "" "CSRF" ""}}
+      {{end}}
+    </div>
+    {{end}}{{end}}
+    {{if eq .Order.SellerID 0}}
+    {{template "envio_pedido" dict "Order" .Order "Origem" .Origem "Acao" (printf "/admin/pedidos/detalhe?id=%d" .Order.ID) "CSRF" .CSRFToken "Config" "/admin/envio"}}
+    {{else if .Order.HasPhysical}}
+    <p class="border-t pt-4 text-sm text-gray-600">O envio deste pedido é feito pelo vendedor ({{.Recebedor}}).</p>
+    {{end}}
+
     <form action="/admin/pedidos/detalhe?id={{.Order.ID}}" method="post" class="border-t pt-4 flex items-center gap-3">
+	  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"/>
       <label class="text-sm font-medium text-gray-700">Alterar Status:</label>
       <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
         <option value="pendente" {{if eq .Order.Status "pendente"}}selected{{end}}>Pendente</option>
         <option value="pago" {{if eq .Order.Status "pago"}}selected{{end}}>Pago</option>
+        <option value="pronto" {{if eq .Order.Status "pronto"}}selected{{end}}>Pronto para envio</option>
         <option value="enviado" {{if eq .Order.Status "enviado"}}selected{{end}}>Enviado</option>
         <option value="entregue" {{if eq .Order.Status "entregue"}}selected{{end}}>Entregue</option>
         <option value="cancelado" {{if eq .Order.Status "cancelado"}}selected{{end}}>Cancelado</option>

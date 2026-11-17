@@ -1,0 +1,46 @@
+{{template "seller_layout" .}}
+{{define "seller_heading"}}Meus pedidos{{end}}
+{{define "seller_content"}}
+<p class="text-sm text-gray-500 mb-5">Pedidos que incluem produtos seus. Os valores mostram apenas a sua parte.</p>
+
+<div class="bg-white rounded-xl shadow overflow-hidden border border-stone-100">
+  <table class="w-full text-sm">
+    <thead class="bg-stone-50 text-xs uppercase text-gray-500">
+      <tr>
+        <th class="text-left px-5 py-3">Pedido</th>
+        <th class="text-left px-5 py-3">Cliente</th>
+        <th class="text-left px-5 py-3">Valor dos seus itens</th>
+        <th class="text-left px-5 py-3">Situação</th>
+        <th class="text-left px-5 py-3">Data</th>
+        <th class="px-5 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-stone-100">
+      {{range .Orders}}
+      <tr class="hover:bg-stone-50">
+        <td class="px-5 py-3"><span class="font-medium">#{{.ID}}</span>{{with .Resumo}}<span class="block text-xs text-gray-500 max-w-xs truncate" title="{{.}}">{{.}}</span>{{end}}</td>
+        <td class="px-5 py-3">{{.CustomerName}}</td>
+        <td class="px-5 py-3 font-medium">{{brl .Total}}</td>
+        <td class="px-5 py-3">
+          {{if eq .Status "pago"}}
+          <span class="text-shell-700 bg-shell-50 px-2 py-0.5 rounded-full text-xs font-semibold">Pago — enviar</span>
+          {{else if eq .Status "enviado"}}
+          <span class="text-forest-700 bg-forest-50 px-2 py-0.5 rounded-full text-xs font-medium">Enviado</span>
+          {{else if eq .Status "entregue"}}
+          <span class="text-gray-600 bg-stone-100 px-2 py-0.5 rounded-full text-xs font-medium">Entregue</span>
+          {{else}}
+          <span class="text-gray-500 bg-stone-100 px-2 py-0.5 rounded-full text-xs font-medium">{{.StatusLabel}}</span>
+          {{end}}
+        </td>
+        <td class="px-5 py-3 text-gray-500 whitespace-nowrap">{{data .CreatedAt}}</td>
+        <td class="px-5 py-3 text-right">
+          <a href="/vendedor/pedidos/detalhe?id={{.ID}}" class="text-shell-600 hover:underline font-medium">Ver</a>
+        </td>
+      </tr>
+      {{else}}
+      <tr><td colspan="6" class="px-5 py-10 text-center text-gray-400">Nenhum pedido para seus produtos ainda.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

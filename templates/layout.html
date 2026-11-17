@@ -2,101 +2,185 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{block "title" .}}Loja Online{{end}}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            shell: {
-              50:  '#fdf2f5',
-              100: '#fce4ea',
-              200: '#f9c5d2',
-              300: '#f49bb2',
-              400: '#ec7592',
-              500: '#e05575',
-              600: '#c9405e',
-              700: '#a8304a',
-            },
-            forest: {
-              50:  '#edf5f1',
-              100: '#d4e8dd',
-              200: '#a9d2bc',
-              300: '#74b498',
-              400: '#45957a',
-              500: '#2e7a63',
-              600: '#24624f',
-              700: '#1c4d3d',
-              800: '#163829',
-              900: '#0f2519',
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  </style>
+  {{template "brand_head" .}}
+  <title>{{block "title" .}}Livredo{{end}}</title>
+  {{block "head_extra" .}}{{end}}
 </head>
-<body class="bg-stone-50 text-gray-800 min-h-screen flex flex-col">
+<body class="papel-textura font-sans text-cafe-800 min-h-screen flex flex-col antialiased">
 
-  <!-- Header -->
-  <header class="bg-forest-800 shadow-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-      <a href="/" class="text-2xl font-bold text-white tracking-tight whitespace-nowrap">🛍️ MinhaLoja</a>
-      <nav class="hidden md:flex gap-6 text-sm font-medium text-forest-200">
-        <a href="/" class="hover:text-white transition">Início</a>
-        <a href="/?categoria=Roupas" class="hover:text-white transition">Roupas</a>
-        <a href="/?categoria=Calçados" class="hover:text-white transition">Calçados</a>
-        <a href="/?categoria=Acessórios" class="hover:text-white transition">Acessórios</a>
-      </nav>
-      <div class="flex items-center gap-2">
-        <form action="/" method="get" class="hidden md:flex">
-          <input name="q" type="text" placeholder="Buscar..." value="{{.Search}}"
-            class="border-0 bg-forest-700 text-white placeholder-forest-300 rounded-l-full px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-shell-400 w-40"/>
-          <button class="bg-shell-500 text-white px-4 py-1.5 rounded-r-full text-sm hover:bg-shell-600 transition">🔍</button>
-        </form>
-        <a href="/carrinho" class="relative bg-shell-500 text-white px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-shell-600 transition">
-          🛒 Carrinho
+  <!-- Cursor customizado: nome do admin, ou nome + nível de fidelidade do cliente, ou nome da loja -->
+  <div id="user-cursor" class="flex items-center">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-md flex-shrink-0">
+      <path d="M2 2L17.5 8.5L10.5 10.5L8.5 17.5L2 2Z" fill="{{.CursorArrowColor}}" stroke="white" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>
+    <span class="ml-2 {{.CursorPillClass}} text-xs font-medium px-2.5 py-1 rounded-full shadow-lg whitespace-nowrap">
+      {{if .CursorIcon}}{{.CursorIcon}} {{end}}{{.CursorName}}{{if .CursorTierLabel}} · {{.CursorTierLabel}}{{end}}
+    </span>
+  </div>
+
+  <!-- Faixa da marca -->
+  <div class="bg-musgo-900 text-papel-200 text-[12px] tracking-[.2em] uppercase">
+    <p class="max-w-7xl mx-auto px-4 py-2 text-center">
+      <span class="text-caramelo-400">✦</span>
+      <span class="mx-2">Um mercado de histórias, de leitor para leitor</span>
+      <span class="text-caramelo-400">✦</span>
+    </p>
+  </div>
+
+  <!-- Cabeçalho -->
+  <header class="sticky top-0 z-50 bg-papel-50/90 backdrop-blur-md border-b border-papel-300/70">
+    <div class="max-w-7xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between gap-4 lg:gap-8">
+
+      <a href="/" class="flex items-center gap-3 shrink-0 group" aria-label="Livredo — página inicial">
+        <span class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-musgo-800 grid place-items-center shadow-sm group-hover:bg-musgo-700 transition">
+          <svg viewBox="0 0 64 64" class="w-7 h-7" aria-hidden="true">
+            <path d="M12 20h12a8 8 0 0 1 8 8v22a6 6 0 0 0-6-6H12z" fill="none" stroke="#FCF8F1" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="M52 20H40a8 8 0 0 0-8 8v22a6 6 0 0 1 6-6h14z" fill="none" stroke="#FCF8F1" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="M32 26c0-7 4-12 11-13-1 7-5 11-11 13z" fill="#CC9A52"/>
+          </svg>
+        </span>
+        <span class="font-serif text-[1.45rem] sm:text-[1.65rem] leading-none text-musgo-900 tracking-tight">
+          Livre<em class="italic font-medium text-musgo-600">do</em>
+        </span>
+      </a>
+
+      <form action="/" method="get" class="hidden md:flex flex-1 max-w-lg items-center relative" role="search">
+        <svg class="w-4 h-4 absolute left-4 text-cafe-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input name="q" type="search" placeholder="Buscar livros, mangás, HQs…" value="{{with .Search}}{{.}}{{end}}" aria-label="Buscar livros"
+               class="w-full bg-papel-100 border border-papel-300 rounded-full pl-11 pr-4 py-2.5 text-sm placeholder-cafe-400 focus:outline-none focus:border-musgo-500 focus:bg-white transition"/>
+      </form>
+
+      <div class="flex items-center gap-1 sm:gap-3 shrink-0">
+        {{if .IsCustomerLoggedIn}}
+        <a href="/conta" class="flex items-center gap-2 p-1.5 sm:pl-1.5 sm:pr-3 rounded-full text-sm text-cafe-700 hover:bg-papel-200 transition" title="Minha conta" aria-label="Minha conta">
+          {{template "avatar" dict "URL" .CustomerAvatar "Nome" .CustomerName "Tam" "w-8 h-8" "Texto" "text-sm"}}
+          <span class="hidden sm:inline max-w-[8rem] truncate">{{.CustomerName}}</span>
+        </a>
+        {{else}}
+        <a href="/conta/entrar" class="flex items-center gap-2 p-2.5 sm:px-3 rounded-full text-sm text-cafe-700 hover:bg-papel-200 transition" aria-label="Entrar">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+          <span class="hidden sm:inline">Entrar</span>
+        </a>
+        {{end}}
+
+        <a href="/carrinho" class="relative flex items-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 pl-4 pr-5 py-2.5 rounded-full text-sm font-medium shadow-sm transition">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+          Sacola
           {{if gt .CartCount 0}}
-            <span class="absolute -top-1.5 -right-1.5 bg-yellow-400 text-gray-900 text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">{{.CartCount}}</span>
+          <span class="absolute -top-1.5 -right-1.5 min-w-[1.4rem] h-[1.4rem] px-1 rounded-full bg-canela-500 text-white text-[11px] font-bold grid place-items-center ring-2 ring-papel-50">{{.CartCount}}</span>
           {{end}}
         </a>
       </div>
     </div>
+
+    <!-- Atalhos: estado do exemplar e gêneros em destaque. No celular a linha
+         rola para o lado em vez de quebrar. -->
+    {{$semFiltro := and (not .Estado) (or (not .SelectedCat) (eq .SelectedCat "Todos"))}}
+    <nav class="border-t border-papel-300/60" aria-label="Seções do acervo">
+      <ul class="sem-barra max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto whitespace-nowrap py-2 text-[14px]">
+        <li><a href="/#acervo" class="atalho {{if and .NaVitrine $semFiltro}}atalho-ativo{{end}}">Todo o acervo</a></li>
+        <li><a href="/?estado=novo#acervo" class="atalho {{if eq .Estado "novo"}}atalho-ativo{{end}}">Novos</a></li>
+        <li><a href="/?estado=usado#acervo" class="atalho {{if eq .Estado "usado"}}atalho-ativo{{end}}">Usados</a></li>
+        <li><a href="/?estado=digital#acervo" class="atalho {{if eq .Estado "digital"}}atalho-ativo{{end}}">E-books</a></li>
+        <li aria-hidden="true" class="w-px h-5 bg-papel-300 mx-2 shrink-0"></li>
+        <li><a href="/?categoria=Mangá#acervo" class="atalho {{if eq .SelectedCat "Mangá"}}atalho-ativo{{end}}">Mangá</a></li>
+        <li><a href="/?categoria=HQ#acervo" class="atalho {{if eq .SelectedCat "HQ"}}atalho-ativo{{end}}">HQ</a></li>
+        <li class="ml-auto pl-4">
+          <a href="/vendedor/cadastro" class="inline-flex items-center gap-1.5 text-canela-700 hover:text-canela-600 font-medium px-2 py-1.5 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Venda seus livros
+          </a>
+        </li>
+      </ul>
+    </nav>
   </header>
 
   <main class="flex-1">
     {{block "content" .}}{{end}}
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-forest-900 text-forest-200 py-10 mt-12">
-    <div class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+  <!-- Rodapé -->
+  <footer class="mt-24 bg-musgo-950 text-papel-200">
+    <div class="max-w-7xl mx-auto px-4 py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
       <div>
-        <h3 class="text-white font-bold text-lg mb-2">🛍️ MinhaLoja</h3>
-        <p class="text-sm">Qualidade e variedade para você. Entregamos em todo o Brasil.</p>
+        <p class="font-serif text-2xl text-papel-50">Livre<em class="italic text-musgo-300">do</em></p>
+        <p class="text-sm leading-relaxed mt-3 text-papel-300/80 max-w-xs">
+          Livros à venda por leitores e livreiros independentes. Cada exemplar esperando seu próximo leitor.
+        </p>
       </div>
       <div>
-        <h4 class="text-white font-semibold mb-2">Links Rápidos</h4>
-        <ul class="space-y-1 text-sm">
-          <li><a href="/" class="hover:text-white transition">Início</a></li>
-          <li><a href="/carrinho" class="hover:text-white transition">Carrinho</a></li>
+        <h4 class="text-[12px] tracking-[.2em] uppercase text-caramelo-400 mb-4">Acervo</h4>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="/#acervo" class="hover:text-white transition">Todos os livros</a></li>
+          <li><a href="/?estado=novo#acervo" class="hover:text-white transition">Novos</a></li>
+          <li><a href="/?estado=usado#acervo" class="hover:text-white transition">Usados</a></li>
+          <li><a href="/?estado=digital#acervo" class="hover:text-white transition">E-books</a></li>
+          <li><a href="/?categoria=Mangá#acervo" class="hover:text-white transition">Mangá</a></li>
+          <li><a href="/?categoria=HQ#acervo" class="hover:text-white transition">HQ</a></li>
         </ul>
       </div>
       <div>
-        <h4 class="text-white font-semibold mb-2">Contato</h4>
-        <p class="text-sm">contato@minhaloja.com.br</p>
-        <p class="text-sm">(11) 99999-9999</p>
+        <h4 class="text-[12px] tracking-[.2em] uppercase text-caramelo-400 mb-4">Sua conta</h4>
+        <ul class="space-y-2.5 text-sm">
+          {{if .IsCustomerLoggedIn}}
+          <li><a href="/conta" class="hover:text-white transition">Minha conta</a></li>
+          <li><a href="/conta/pedidos" class="hover:text-white transition">Meus pedidos</a></li>
+          <li><a href="/conta/biblioteca" class="hover:text-white transition">Minha biblioteca</a></li>
+          {{else}}
+          <li><a href="/conta/entrar" class="hover:text-white transition">Entrar</a></li>
+          <li><a href="/conta/cadastro" class="hover:text-white transition">Criar conta</a></li>
+          {{end}}
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-[12px] tracking-[.2em] uppercase text-caramelo-400 mb-4">Para vendedores</h4>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="/vendedor/cadastro" class="hover:text-white transition">Venda seus livros</a></li>
+          <li><a href="/vendedor/login" class="hover:text-white transition">Área do vendedor</a></li>
+        </ul>
       </div>
     </div>
-    <p class="text-center text-forest-400 text-xs mt-8">© 2025 MinhaLoja. Todos os direitos reservados.</p>
+
+    <div class="border-t border-musgo-800/80">
+      <p class="max-w-7xl mx-auto px-4 py-6 text-xs text-papel-300/60 flex flex-col sm:flex-row gap-2 justify-between">
+        <span>© {{.Year}} Livredo. Todos os direitos reservados. · <a href="/termos" class="hover:text-papel-50 underline-offset-2 hover:underline">Termos de Uso</a> · <a href="/privacidade" class="hover:text-papel-50 underline-offset-2 hover:underline">Privacidade</a></span>
+        <span>Pagamentos processados pelo Mercado Pago.</span>
+      </p>
+    </div>
   </footer>
 
+  <script>
+    (function () {
+      if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+
+      var cursor = document.getElementById('user-cursor');
+      if (!cursor) return;
+
+      document.documentElement.classList.add('has-user-cursor');
+
+      var pending = false;
+      var x = 0, y = 0;
+
+      function render() {
+        cursor.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0)';
+        pending = false;
+      }
+
+      window.addEventListener('mousemove', function (e) {
+        x = e.clientX;
+        y = e.clientY;
+        cursor.style.opacity = '1';
+        if (!pending) {
+          pending = true;
+          requestAnimationFrame(render);
+        }
+      });
+
+      document.addEventListener('mouseleave', function () {
+        cursor.style.opacity = '0';
+      });
+    })();
+  </script>
 </body>
 </html>
 {{end}}

@@ -1,0 +1,88 @@
+{{/*
+  Peças de perfil reaproveitadas por loja, painel do vendedor e admin.
+
+  avatar:     dict "URL" <foto> "Nome" <nome> "Tam" <classes de tamanho> "Texto" <classe do texto>
+  estrelas:   um models.SellerRating (5 estrelas com meia estrela)
+  selo_nivel: um models.SellerTier (cinza < bronze < prata < ouro < esmeralda)
+  reputacao:  um models.SellerRating completo (estrelas + nota + selo)
+*/}}
+
+{{define "avatar"}}
+{{if .URL}}
+<img src="{{.URL}}" alt="Foto de {{.Nome}}" class="{{.Tam}} rounded-full object-cover shrink-0 ring-2 ring-papel-50 shadow-sm"/>
+{{else}}
+<span class="{{.Tam}} rounded-full shrink-0 grid place-items-center bg-gradient-to-br from-musgo-600 to-musgo-800 text-papel-50 font-serif {{.Texto}} ring-2 ring-papel-50 shadow-sm" aria-hidden="true">{{inicial .Nome}}</span>
+{{end}}
+{{end}}
+
+{{define "estrelas"}}
+<span class="inline-flex items-center gap-0.5" role="img" aria-label="{{.AverageLabel}} de 5 estrelas">
+  {{range .Stars}}
+  <span class="relative w-4 h-4 inline-block">
+    <svg class="absolute inset-0 w-4 h-4 text-papel-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L10 14.9l-5.2 2.8 1-5.9L1.5 7.7l5.9-.8z"/></svg>
+    {{if ne . "vazia"}}
+    <span class="absolute inset-y-0 left-0 overflow-hidden {{if eq . "meia"}}w-1/2{{else}}w-full{{end}}">
+      <svg class="w-4 h-4 text-caramelo-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L10 14.9l-5.2 2.8 1-5.9L1.5 7.7l5.9-.8z"/></svg>
+    </span>
+    {{end}}
+  </span>
+  {{end}}
+</span>
+{{end}}
+
+{{define "selo_nivel"}}
+<span class="selo-nivel selo-{{.Key}} inline-flex items-center gap-1 text-[10.5px] tracking-[.14em] uppercase font-semibold px-2.5 py-0.5 rounded-full"
+      title="Nível do vendedor: {{.Label}}">
+  <svg class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 1l2.4 3.3 4-.6-.6 4L19 10l-3.2 2.3.6 4-4-.6L10 19l-2.4-3.3-4 .6.6-4L1 10l3.2-2.3-.6-4 4 .6z"/></svg>
+  {{.Label}}
+</span>
+{{end}}
+
+{{define "reputacao"}}
+<span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+  {{template "selo_nivel" .Tier}}
+  {{if .Count}}
+  {{template "estrelas" .}}
+  <span class="text-xs text-cafe-600"><strong class="font-semibold text-cafe-800">{{.AverageLabel}}</strong> · {{.Count}} {{if eq .Count 1}}avaliação{{else}}avaliações{{end}}</span>
+  {{else}}
+  <span class="text-xs text-cafe-500">Ainda sem avaliações</span>
+  {{end}}
+</span>
+{{end}}
+
+{{/* Botão "Continuar com o Google", no padrão visual exigido pelo Google:
+     fundo branco, logotipo "G" colorido e texto neutro. */}}
+{{define "botao_google"}}
+{{with .GoogleAviso}}
+<div class="mt-6 rounded-xl bg-canela-50 border border-canela-200 px-4 py-3 text-sm text-canela-800">{{.}}</div>
+{{end}}
+{{if .GoogleLogin}}
+<a href="/conta/google{{with .Volta}}?volta={{.}}{{end}}"
+   class="mt-7 flex items-center justify-center gap-3 w-full bg-white border border-[#DADCE0] hover:bg-[#F8FAFF] hover:border-[#C6CAD2] text-[#1F1F1F] py-3.5 rounded-full font-medium shadow-sm transition">
+  <svg class="w-5 h-5" viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </svg>
+  Continuar com o Google
+</a>
+<div class="flex items-center gap-3 mt-6 text-xs tracking-[.18em] uppercase text-cafe-400" aria-hidden="true">
+  <span class="flex-1 h-px bg-papel-300"></span>ou com e-mail<span class="flex-1 h-px bg-papel-300"></span>
+</div>
+{{end}}
+{{end}}
+
+{{/* Abas da área do cliente. Uso: {{template "nav_conta" "dados"}} (dados, pedidos ou biblioteca). */}}
+{{define "nav_conta"}}
+<nav class="mt-8 flex flex-wrap justify-center gap-3 text-sm" aria-label="Minha conta">
+  {{range $aba := list "dados" "pedidos" "biblioteca" "privacidade"}}
+  {{if eq $aba $}}
+  <span class="px-5 py-2 rounded-full bg-musgo-800 text-papel-50" aria-current="page">{{if eq $aba "dados"}}Meus dados{{else if eq $aba "pedidos"}}Meus pedidos{{else if eq $aba "privacidade"}}Privacidade{{else}}Minha biblioteca{{end}}</span>
+  {{else}}
+  <a href="/conta{{if eq $aba "pedidos"}}/pedidos{{else if eq $aba "biblioteca"}}/biblioteca{{else if eq $aba "privacidade"}}/privacidade{{end}}"
+     class="px-5 py-2 rounded-full border border-papel-300 bg-white/60 text-cafe-600 hover:border-musgo-500 hover:text-musgo-800 transition">{{if eq $aba "dados"}}Meus dados{{else if eq $aba "pedidos"}}Meus pedidos{{else if eq $aba "privacidade"}}Privacidade{{else}}Minha biblioteca{{end}}</a>
+  {{end}}
+  {{end}}
+</nav>
+{{end}}

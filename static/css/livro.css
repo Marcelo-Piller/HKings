@@ -1,0 +1,292 @@
+/* Livredo — acabamento artístico que o Tailwind sozinho não cobre:
+   textura de papel, capas com lombada, capitular, ornamentos e o cursor. */
+
+/* ── Papel ─────────────────────────────────────────────────────────────── */
+
+/* Ruído muito sutil sobre o creme, para o fundo parecer papel e não tela. */
+.papel-textura {
+  background-color: #FAF5EC;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");
+}
+
+::selection { background: #D6EDDF; color: #133826; }
+
+:focus-visible {
+  outline: 2px solid #B37F3A;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Tipografia ────────────────────────────────────────────────────────── */
+
+.font-serif { font-optical-sizing: auto; }
+
+/* Capitular: a primeira letra da descrição, como na abertura de um capítulo. */
+.capitular::first-letter {
+  float: left;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 3.6em;
+  line-height: .82;
+  font-weight: 600;
+  color: #1F5C3C;
+  margin: .08em .12em 0 0;
+}
+
+/* Sublinhado feito à mão, em ouro, para a palavra de destaque do título. */
+.sublinhado {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 12' preserveAspectRatio='none'%3E%3Cpath d='M2 8 C 40 2, 80 11, 122 6 S 200 3, 238 7' stroke='%23B37F3A' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") left 92% / 100% .32em no-repeat;
+  padding-bottom: .08em;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Atalhos do cabeçalho ──────────────────────────────────────────────── */
+
+.atalho {
+  display: inline-flex;
+  align-items: center;
+  padding: .375rem 1rem;
+  border-radius: 9999px;
+  color: #5A4A3A;
+  transition: background-color .2s ease, color .2s ease;
+}
+.atalho:hover { background: #EFE2CC; color: #1A4A31; }
+.atalho-ativo,
+.atalho-ativo:hover { background: #1A4A31; color: #FCF8F1; }
+
+/* A linha de atalhos rola para o lado no celular, sem barra aparente. */
+.sem-barra { scrollbar-width: none; }
+.sem-barra::-webkit-scrollbar { display: none; }
+
+/* ── Ornamentos ────────────────────────────────────────────────────────── */
+
+/* Filete com florão no meio: ——— ❦ ——— */
+.ornamento {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+  color: #B37F3A;
+}
+.ornamento::before,
+.ornamento::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor 30%, currentColor 70%, transparent);
+  opacity: .55;
+}
+
+/* ── Capa de livro ─────────────────────────────────────────────────────── */
+
+.livro-capa {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px 7px 7px 2px;
+  background: #EFE2CC;
+  box-shadow:
+    0 1px 1px rgba(43, 30, 20, .06),
+    0 12px 22px -12px rgba(48, 34, 22, .55),
+    inset 0 0 0 1px rgba(43, 30, 20, .05);
+  transition: transform .45s cubic-bezier(.2, .7, .2, 1), box-shadow .45s ease;
+}
+
+/* A lombada: sombra e brilho à esquerda, onde a capa dobra. */
+.livro-capa::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 12px;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, .30) 0%,
+    rgba(255, 255, 255, .14) 38%,
+    rgba(0, 0, 0, .06) 70%,
+    rgba(0, 0, 0, 0) 100%);
+}
+
+.livro:hover .livro-capa,
+.livro:focus-within .livro-capa {
+  transform: translateY(-7px) rotate(-1.2deg);
+  box-shadow:
+    0 2px 2px rgba(43, 30, 20, .05),
+    0 26px 34px -16px rgba(48, 34, 22, .55),
+    inset 0 0 0 1px rgba(43, 30, 20, .05);
+}
+
+.livro-capa img {
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1);
+}
+.livro:hover .livro-capa img { transform: scale(1.035); }
+
+/* Capa tipográfica, para livros ainda sem foto. As medidas em cqw seguem a
+   largura da própria capa, então ela funciona igual na miniatura da sacola e
+   na capa grande da página do livro. */
+.capa-gerada {
+  container-type: inline-size;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  background: var(--capa-fundo);
+  color: var(--capa-texto);
+}
+/* O espaçamento fica na moldura, não na capa: cqw usado no próprio container
+   seria medido contra um container externo (que não existe) e cairia na
+   largura da janela. */
+.capa-moldura {
+  flex: 1;
+  margin: 7cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 9cqw 8cqw 7cqw;
+  /* Moldura dupla: filete, respiro na cor do fundo e outro filete. */
+  box-shadow:
+    inset 0 0 0 1px var(--capa-detalhe),
+    inset 0 0 0 3.5cqw var(--capa-base),
+    inset 0 0 0 calc(3.5cqw + 1px) var(--capa-detalhe);
+}
+.capa-genero {
+  font: 500 5cqw/1.2 'DM Sans', system-ui, sans-serif;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--capa-detalhe);
+}
+.capa-miolo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+.capa-titulo {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 12.5cqw;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.capa-florao {
+  margin-top: 6cqw;
+  font-size: 7cqw;
+  color: var(--capa-detalhe);
+}
+.capa-selo {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: 500 4.2cqw/1 'DM Sans', system-ui, sans-serif;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  opacity: .75;
+}
+
+/* Tons das capas: o verde da marca e os marrons que o acompanham. */
+.capa-musgo    { --capa-base: #1F5C3C; --capa-fundo: linear-gradient(160deg, #256F47, #1A4A31); --capa-texto: #F7EFE2; --capa-detalhe: #CC9A52; }
+.capa-canela   { --capa-base: #8A4F2F; --capa-fundo: linear-gradient(160deg, #A3613A, #6F3F27); --capa-texto: #FCF8F1; --capa-detalhe: #F5E7D0; }
+.capa-cafe     { --capa-base: #30261D; --capa-fundo: linear-gradient(160deg, #43362A, #211A14); --capa-texto: #F5E7D0; --capa-detalhe: #CC9A52; }
+.capa-caramelo { --capa-base: #B08140; --capa-fundo: linear-gradient(160deg, #CC9A52, #94672D); --capa-texto: #133826; --capa-detalhe: #1A4A31; }
+.capa-camurca  { --capa-base: #B69572; --capa-fundo: linear-gradient(160deg, #D0B38E, #9C7856); --capa-texto: #133826; --capa-detalhe: #1A4A31; }
+.capa-papel    { --capa-base: #ECDFC8; --capa-fundo: linear-gradient(160deg, #F7EFE2, #E2CFAE); --capa-texto: #1A4A31; --capa-detalhe: #8A4F2F; }
+
+/* Capa em destaque na página do produto, com leve perspectiva. */
+.livro-destaque {
+  transform: perspective(1400px) rotateY(-9deg);
+  transform-origin: left center;
+}
+.livro-destaque:hover { transform: perspective(1400px) rotateY(-3deg); }
+
+/* ── Movimento ─────────────────────────────────────────────────────────── */
+
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+.surgir { animation: surgir .7s cubic-bezier(.2, .7, .2, 1) both; }
+.grade-livros > .surgir:nth-child(5n+2) { animation-delay: .06s; }
+.grade-livros > .surgir:nth-child(5n+3) { animation-delay: .12s; }
+.grade-livros > .surgir:nth-child(5n+4) { animation-delay: .18s; }
+.grade-livros > .surgir:nth-child(5n+5) { animation-delay: .24s; }
+
+@keyframes flutuar {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.flutuar { animation: flutuar 6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .surgir, .flutuar { animation: none; }
+  .livro-capa, .livro-capa img, .livro-destaque { transition: none; }
+  .livro:hover .livro-capa, .livro:hover .livro-capa img { transform: none; }
+}
+
+/* ── Cursor com nome do leitor ─────────────────────────────────────────── */
+
+html.has-user-cursor,
+html.has-user-cursor * {
+  cursor: none !important;
+}
+#user-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+  transition: opacity .15s ease;
+}
+
+/* ── Menu lateral dos painéis de admin e vendedor ── */
+.painel-secao {
+  padding: .9rem .75rem .35rem; font-size: 10px; letter-spacing: .22em;
+  text-transform: uppercase; color: rgba(204,154,82,.75);
+}
+.painel-secao:first-child { padding-top: .25rem; }
+.painel-link {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .4rem .6rem; border-radius: .7rem;
+  color: #C5DACB; transition: background .15s, color .15s, box-shadow .15s;
+}
+.painel-link:hover { background: rgba(252,248,241,.06); color: #fff; }
+.painel-icone {
+  width: 2rem; height: 2rem; border-radius: .6rem; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: rgba(252,248,241,.06); color: #E2C08A;
+  transition: background .15s, color .15s, transform .15s;
+}
+.painel-link:hover .painel-icone { background: rgba(252,248,241,.12); transform: translateY(-1px); }
+.painel-link.ativo { background: rgba(252,248,241,.1); color: #fff; box-shadow: inset 3px 0 0 #CC9A52; }
+.painel-link.ativo .painel-icone { background: #CC9A52; color: #173A28; }
+
+/* Escolha de estrelas: os rádios vêm de 5 a 1 e a linha é invertida, para
+   que passar o mouse numa estrela acenda também as anteriores só com CSS. */
+.avaliar-estrelas { display: inline-flex; flex-direction: row-reverse; gap: .15rem; border: 0; padding: 0; margin: 0; }
+.avaliar-estrelas label { font-size: 2rem; line-height: 1; color: #DCCFB8; cursor: pointer; transition: color .12s, transform .12s; }
+.avaliar-estrelas label:hover,
+.avaliar-estrelas label:hover ~ label,
+.avaliar-estrelas input:checked ~ label { color: #C0963F; }
+.avaliar-estrelas label:hover { transform: scale(1.12); }
+.avaliar-estrelas input:focus-visible + label { outline: 2px solid #3E7A55; outline-offset: 2px; border-radius: 4px; }
+
+/* ── Selos de nível do vendedor: cinza < bronze < prata < ouro < esmeralda ── */
+.selo-nivel { border: 1px solid transparent; }
+.selo-cinza  { background: #EFEDE9; color: #6F6A63; border-color: #DAD6CF; }
+.selo-bronze { background: linear-gradient(135deg, #F3E0CC, #E2BF98); color: #7A4A22; border-color: #D4A77A; }
+.selo-prata  { background: linear-gradient(135deg, #F4F6F8, #D5DCE2); color: #4F5B66; border-color: #BCC6CF; }
+.selo-ouro   { background: linear-gradient(135deg, #FBEFC4, #E9C865); color: #6B4E00; border-color: #D6AF3E; }
+.selo-esmeralda {
+  background: linear-gradient(135deg, #0F9D6B, #0A6B4A);
+  color: #F2FFF8; border-color: #0B7A53;
+  box-shadow: 0 0 0 2px rgba(15,157,107,.18), 0 4px 12px -4px rgba(15,157,107,.55);
+}

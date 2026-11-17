@@ -1,0 +1,85 @@
+{{template "seller_layout" .}}
+{{define "seller_heading"}}Meus produtos{{end}}
+{{define "seller_content"}}
+
+{{if not .Seller.MPConnected}}
+<div class="mb-5 rounded-xl bg-caramelo-100 border border-caramelo-300 px-4 py-3 text-sm text-canela-800">
+  Seus livros ainda <strong>não aparecem na loja</strong>: conecte sua conta do Mercado Pago no
+  <a href="/vendedor" class="underline font-medium">Início</a> para começar a receber.
+</div>
+{{end}}
+<div class="flex items-center justify-between mb-5">
+  <p class="text-sm text-gray-500">Produtos cadastrados por você.</p>
+  <div class="flex flex-wrap gap-2 justify-end">
+    <a href="/vendedor/produtos/massa" class="px-4 py-2 rounded-lg text-sm font-medium border border-stone-300 bg-white text-gray-700 hover:border-forest-500">Edição em massa</a>
+    <a href="/vendedor/importar" class="px-4 py-2 rounded-lg text-sm font-medium border border-stone-300 bg-white text-gray-700 hover:border-forest-500">Importar planilha</a>
+    <a href="/vendedor/produtos/novo" class="bg-shell-500 hover:bg-shell-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow">
+      + Novo produto
+    </a>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl shadow overflow-hidden border border-stone-100">
+  <table class="w-full text-sm">
+    <thead class="bg-stone-50 text-xs uppercase text-gray-500">
+      <tr>
+        <th class="text-left px-5 py-3">Produto</th>
+        <th class="text-left px-5 py-3">Categoria</th>
+        <th class="text-left px-5 py-3">Preço</th>
+        <th class="text-left px-5 py-3">Estoque</th>
+        <th class="text-left px-5 py-3">Status</th>
+        <th class="px-5 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-stone-100">
+      {{range .Products}}
+      <tr class="hover:bg-stone-50">
+        <td class="px-5 py-3">
+          <div class="flex items-center gap-3">
+            <img src="{{.ImageURL}}" alt="" class="w-10 h-10 object-cover rounded border border-stone-200"/>
+            <span class="font-medium text-gray-700">{{.Name}}</span>
+          </div>
+        </td>
+        <td class="px-5 py-3 text-gray-600">{{.Category}}<br/>{{if .IsDigital}}<span class="text-xs text-cafe-700">E-book · {{.EbookTypeLabel}}</span>{{else}}{{with .ConditionLabel}}<span class="text-xs {{if eq . "Usado"}}text-canela-600{{else}}text-musgo-700{{end}}">{{.}}</span>{{else}}<span class="text-xs text-canela-600">estado não informado</span>{{end}}{{end}}</td>
+        <td class="px-5 py-3 font-medium">{{.FormattedPrice}}</td>
+        <td class="px-5 py-3">
+          {{if .IsDigital}}
+          <span class="text-gray-400" title="E-book não tem estoque">—</span>
+          {{else if le .Stock $.LowStockThreshold}}
+          <span class="text-amber-700 font-semibold">{{.Stock}}</span>
+          {{else}}
+          {{.Stock}}
+          {{end}}
+        </td>
+        <td class="px-5 py-3">
+          {{if .Active}}
+          <span class="text-forest-700 bg-forest-50 px-2 py-0.5 rounded-full text-xs font-medium">Na loja</span>
+          {{else}}
+          <span class="text-gray-500 bg-stone-100 px-2 py-0.5 rounded-full text-xs font-medium">Oculto</span>
+          {{end}}
+        </td>
+        <td class="px-5 py-3">
+          <div class="flex gap-3 justify-end">
+            <a class="text-shell-600 hover:underline" href="/vendedor/produtos/editar?id={{.ID}}">Editar</a>
+          {{if .IsDigital}}<a href="/vendedor/produtos/audio?id={{.ID}}" class="text-xs text-forest-700 hover:underline whitespace-nowrap ml-2">{{if .AudioTracks}}Audiobook ({{.AudioTracks}}){{else}}+ Audiobook{{end}}</a>{{end}}
+            <form method="post" action="/vendedor/produtos/excluir"
+                  onsubmit="return confirm('Excluir este livro? Para só escondê-lo da loja, use Editar e desmarque &quot;visível na loja&quot;.')">
+              <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"/>
+              <input type="hidden" name="id" value="{{.ID}}"/>
+              <button class="text-red-600 hover:underline">Excluir</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="6" class="px-5 py-10 text-center text-gray-400">
+          Você ainda não cadastrou produtos.
+          <a href="/vendedor/produtos/novo" class="text-shell-600 hover:underline font-medium">Cadastrar o primeiro</a>.
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

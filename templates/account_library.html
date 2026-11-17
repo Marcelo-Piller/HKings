@@ -1,0 +1,69 @@
+{{template "layout" .}}
+
+{{define "title"}}Minha biblioteca — Livredo{{end}}
+
+{{define "content"}}
+<div class="max-w-4xl mx-auto px-4 pt-12">
+  <header class="text-center">
+    <p class="text-[12px] tracking-[.25em] uppercase text-musgo-600 font-medium"><span class="text-caramelo-500">✦</span> Minha conta</p>
+    <h1 class="font-serif text-4xl md:text-5xl text-musgo-950 mt-3 tracking-tight">Minha <em class="italic text-musgo-600">biblioteca</em></h1>
+    <p class="text-cafe-600 mt-3">Os livros digitais que você comprou. Baixe quando e quantas vezes quiser.</p>
+    <div class="ornamento max-w-xs mx-auto mt-6 text-lg" aria-hidden="true"><span>❦</span></div>
+  </header>
+
+  {{template "nav_conta" "biblioteca"}}
+
+  {{with .Aviso}}
+  <div class="mt-8 rounded-xl bg-canela-50 border border-canela-200 px-4 py-3 text-sm text-canela-800 text-center">{{.}}</div>
+  {{end}}
+
+  {{if not .Items}}
+  <div class="text-center py-16">
+    <svg class="w-20 h-20 mx-auto text-musgo-300" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 16h16a8 8 0 0 1 8 8v28a6 6 0 0 0-6-6H8z"/>
+      <path d="M56 16H40a8 8 0 0 0-8 8v28a6 6 0 0 1 6-6h18z"/>
+    </svg>
+    <p class="font-serif text-3xl text-musgo-900 mt-6">Sua biblioteca ainda está vazia.</p>
+    <p class="text-cafe-500 mt-2">E-books comprados aparecem aqui, prontos para baixar.</p>
+    <a href="/?estado=digital#acervo" class="inline-block mt-8 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-7 py-3 rounded-full font-medium transition">Ver e-books</a>
+  </div>
+  {{else}}
+  <ul class="mt-10 grid sm:grid-cols-2 gap-5">
+    {{range .Items}}
+    <li class="flex gap-4 rounded-2xl bg-white/75 border border-papel-300 p-4">
+      <a href="/produto?id={{.ProductID}}" class="livro shrink-0 w-20">
+        <div class="livro-capa aspect-[2/3]">
+          {{template "capa" dict "ID" .ProductID "Name" .Name "ImageURL" .ImageURL "Category" "E-book" "SellerLabel" .Author}}
+        </div>
+      </a>
+      <div class="min-w-0 flex-1 flex flex-col">
+        <a href="/produto?id={{.ProductID}}" class="font-serif text-lg leading-snug text-cafe-900 hover:text-musgo-700 transition line-clamp-2">{{.Name}}</a>
+        {{with .Author}}<p class="text-sm italic text-cafe-600 truncate">{{.}}</p>{{end}}
+        <p class="text-xs text-cafe-500 mt-1">{{if .OwnsEbook}}{{.EbookTypeLabel}}{{with .EbookSizeLabel}} · {{.}}{{end}}{{end}}{{if and .OwnsEbook .OwnsAudio}} + {{end}}{{if .OwnsAudio}}Audiobook{{with .AudioLabel}} · {{.}}{{end}}{{end}} · <a href="/pedido?id={{.OrderID}}" class="underline decoration-papel-400 underline-offset-2 hover:text-musgo-700">pedido nº {{.OrderID}}</a></p>
+        <div class="mt-auto pt-3 flex flex-wrap gap-2">
+          {{if .OwnsAudio}}
+          <a href="/conta/biblioteca/ouvir?livro={{.ProductID}}"
+             class="inline-flex items-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-5 py-2 rounded-full text-sm font-medium shadow-sm transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>
+            Ouvir
+          </a>
+          {{end}}
+          {{if not .OwnsEbook}}
+          {{else if .Available}}
+          <a href="/conta/biblioteca/baixar?livro={{.ProductID}}"
+             class="inline-flex items-center gap-2 bg-musgo-800 hover:bg-musgo-700 text-papel-50 px-5 py-2 rounded-full text-sm font-medium shadow-sm transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+            Baixar {{.EbookTypeLabel}}
+          </a>
+          {{else}}
+          <p class="text-xs text-canela-700">Arquivo indisponível no momento. Fale com a loja se precisar de ajuda.</p>
+          {{end}}
+        </div>
+      </div>
+    </li>
+    {{end}}
+  </ul>
+  <p class="text-xs text-cafe-400 text-center mt-8">PDF abre em qualquer leitor de PDF. EPUB abre em apps de leitura como Apple Books, Google Play Livros ou Kobo.</p>
+  {{end}}
+</div>
+{{end}}

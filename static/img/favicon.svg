@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#1A4A31"/>
+  <!-- Livro aberto -->
+  <path d="M12 20h12a8 8 0 0 1 8 8v22a6 6 0 0 0-6-6H12z" fill="none" stroke="#FCF8F1" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M52 20H40a8 8 0 0 0-8 8v22a6 6 0 0 1 6-6h14z" fill="none" stroke="#FCF8F1" stroke-width="3.2" stroke-linejoin="round"/>
+  <!-- Folha brotando da lombada -->
+  <path d="M32 26c0-7 4-12 11-13-1 7-5 11-11 13z" fill="#CC9A52"/>
+</svg>

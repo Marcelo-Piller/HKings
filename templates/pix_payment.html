@@ -1,0 +1,141 @@
+{{template "layout" .}}
+
+{{define "title"}}Pagamento PIX — Pedido #{{.Order.ID}}{{end}}
+
+{{define "content"}}
+<div class="max-w-lg mx-auto px-4 py-10">
+
+  <!-- Cabeçalho -->
+  <div class="text-center mb-6">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-3">
+      <svg viewBox="0 0 512 512" class="w-9 h-9" fill="none">
+        <path d="M340.3 395.2c-21.3 21.3-49.5 33-79.5 33s-58.2-11.7-79.5-33L75.2 289.1c-21.3-21.3-33-49.5-33-79.5s11.7-58.2 33-79.5L181.3 24c21.3-21.3 49.5-33 79.5-33s58.2 11.7 79.5 33L446.4 130c21.3 21.3 33 49.5 33 79.5s-11.7 58.2-33 79.5L340.3 395.2z" fill="#32BCAD" opacity=".2"/>
+        <path d="M394.2 154.4l-36.7-36.7c-8.2-8.2-19.1-12.7-30.7-12.7s-22.5 4.5-30.7 12.7l-40.3 40.3-40.3-40.3c-8.2-8.2-19.1-12.7-30.7-12.7s-22.5 4.5-30.7 12.7l-36.7 36.7C99.2 162.6 94.7 173.5 94.7 185.1s4.5 22.5 12.7 30.7l40.3 40.3-40.3 40.3c-8.2 8.2-12.7 19.1-12.7 30.7s4.5 22.5 12.7 30.7l36.7 36.7c8.2 8.2 19.1 12.7 30.7 12.7s22.5-4.5 30.7-12.7l40.3-40.3 40.3 40.3c8.2 8.2 19.1 12.7 30.7 12.7s22.5-4.5 30.7-12.7l36.7-36.7c8.2-8.2 12.7-19.1 12.7-30.7s-4.5-22.5-12.7-30.7l-40.3-40.3 40.3-40.3c8.2-8.2 12.7-19.1 12.7-30.7s-4.5-22.4-12.7-30.6z" fill="#32BCAD"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-800">Pague com PIX</h1>
+    <p class="text-gray-500 text-sm mt-1">Pedido <strong>#{{.Order.ID}}</strong> — <strong>{{.Order.FormattedTotal}}</strong></p>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow border border-stone-100 overflow-hidden">
+
+    <!-- Status de aguardo -->
+    <div id="waitingBanner" class="bg-amber-50 border-b border-amber-200 px-5 py-3 flex items-center gap-3">
+      <div class="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+      <p class="text-sm text-amber-800 font-medium">Aguardando confirmação do pagamento…</p>
+      <span id="timer" class="ml-auto text-xs font-mono text-amber-600 flex-shrink-0">30:00</span>
+    </div>
+
+    <!-- Confirmado (oculto inicialmente) -->
+    <div id="paidBanner" class="hidden bg-green-50 border-b border-green-200 px-5 py-4 text-center">
+      <p class="text-green-700 font-bold text-lg">✅ Pagamento confirmado!</p>
+      <p class="text-green-600 text-sm mt-0.5">Redirecionando para o pedido…</p>
+    </div>
+
+    <!-- QR Code -->
+    {{if .Order.PixQRCodeImg}}
+    <div class="p-6 flex flex-col items-center gap-4">
+      <p class="text-sm text-gray-500 text-center">Escaneie o QR Code com o app do seu banco:</p>
+      <img src="data:image/png;base64,{{.Order.PixQRCodeImg}}"
+           alt="QR Code PIX"
+           class="w-52 h-52 border-4 border-white rounded-xl shadow-md"/>
+    </div>
+    {{end}}
+
+    <!-- Copia e Cola -->
+    {{if .Order.PixQRCode}}
+    <div class="px-5 pb-5">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">PIX Copia e Cola</p>
+      <div class="flex gap-2">
+        <input id="pixCode" type="text" readonly value="{{.Order.PixQRCode}}"
+               class="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2.5 text-xs font-mono text-gray-600 focus:outline-none cursor-pointer"
+               onclick="this.select()"/>
+        <button type="button" onclick="copyPix()"
+                class="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition flex-shrink-0">
+          Copiar
+        </button>
+      </div>
+      <p id="copyMsg" class="hidden text-xs text-green-600 font-medium mt-1.5 text-center">✓ Código copiado!</p>
+    </div>
+    {{end}}
+
+    <!-- Instruções -->
+    <div class="px-5 pb-5">
+      <ol class="text-sm text-gray-600 space-y-1.5 list-decimal list-inside">
+        <li>Abra o app do seu banco ou carteira digital</li>
+        <li>Escolha a opção <strong>PIX</strong> → <strong>Pagar com QR Code</strong> ou <strong>Copia e Cola</strong></li>
+        <li>Confirme o valor de <strong>{{.Order.FormattedTotal}}</strong></li>
+        <li>A confirmação é automática — <strong>não feche esta página</strong></li>
+      </ol>
+    </div>
+
+    <!-- Resumo do pedido -->
+    <div class="border-t border-stone-100 px-5 py-4 bg-stone-50">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Resumo</p>
+      <div class="flex justify-between text-sm text-gray-700">
+        <span>{{.Order.CustomerName}}</span>
+        <span class="font-bold text-shell-600">{{.Order.FormattedTotal}}</span>
+      </div>
+      <p class="text-xs text-gray-400 mt-0.5">{{.Order.CustomerEmail}}</p>
+    </div>
+  </div>
+
+  <p class="text-center text-xs text-gray-400 mt-4">
+    O QR Code expira em 30 minutos. Em caso de dúvidas, entre em contato conosco.
+  </p>
+</div>
+
+<script>
+var orderId = {{.Order.ID}};
+var expiresIn = 30 * 60; // 30 minutos em segundos
+var pollInterval;
+var timerInterval;
+
+function copyPix() {
+  var el = document.getElementById('pixCode');
+  navigator.clipboard.writeText(el.value).catch(function() {
+    el.select();
+    document.execCommand('copy');
+  });
+  document.getElementById('copyMsg').classList.remove('hidden');
+  setTimeout(function() { document.getElementById('copyMsg').classList.add('hidden'); }, 2500);
+}
+
+function startTimer() {
+  timerInterval = setInterval(function() {
+    expiresIn--;
+    if (expiresIn <= 0) {
+      clearInterval(timerInterval);
+      clearInterval(pollInterval);
+      document.getElementById('timer').textContent = '00:00';
+      return;
+    }
+    var m = Math.floor(expiresIn / 60);
+    var s = expiresIn % 60;
+    document.getElementById('timer').textContent =
+      (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+}
+
+function checkPayment() {
+  fetch('/pix/status?pedido=' + orderId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.paid || data.status === 'pago') {
+        clearInterval(pollInterval);
+        clearInterval(timerInterval);
+        document.getElementById('waitingBanner').classList.add('hidden');
+        document.getElementById('paidBanner').classList.remove('hidden');
+        setTimeout(function() {
+          window.location.href = '/pedido?id=' + orderId;
+        }, 2000);
+      }
+    })
+    .catch(function() {});
+}
+
+startTimer();
+pollInterval = setInterval(checkPayment, 4000);
+checkPayment(); // verifica imediatamente ao carregar
+</script>
+{{end}}

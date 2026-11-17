@@ -1,0 +1,70 @@
+{{template "seller_layout" .}}
+{{define "seller_heading"}}Pedido #{{.Order.ID}}{{end}}
+{{define "seller_content"}}
+<div class="max-w-2xl">
+  <a href="/vendedor/pedidos" class="text-shell-600 text-sm hover:underline font-medium">← Voltar</a>
+
+  <div class="bg-white rounded-xl shadow p-6 mt-4 space-y-5 border border-stone-100">
+    {{if .Error}}
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{.Error}}</div>
+    {{end}}
+
+    <div>
+      <h3 class="font-semibold text-forest-700 mb-3">Dados de entrega</h3>
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div><p class="text-gray-500">Cliente</p><p class="font-medium">{{.Order.CustomerName}}</p></div>
+        <div><p class="text-gray-500">Telefone</p><p class="font-medium">{{.Order.CustomerPhone}}</p></div>
+        <div><p class="text-gray-500">E-mail</p><p class="font-medium">{{.Order.CustomerEmail}}</p></div>
+        <div><p class="text-gray-500">Criado em</p><p class="font-medium">{{data .Order.CreatedAt}}</p></div>
+        <div class="col-span-2"><p class="text-gray-500">Endereço</p><p class="font-medium">{{.Order.Address}}</p></div>
+      </div>
+    </div>
+
+    <div class="border-t border-stone-200 pt-4">
+      <h3 class="font-semibold text-forest-700 mb-3">Seus itens neste pedido</h3>
+      {{range .Order.Items}}
+      <div class="flex justify-between text-sm py-1">
+        <span>{{.ProductName}} × {{.Quantity}}</span>
+        <span class="font-medium">{{brl .Price}}</span>
+      </div>
+      {{end}}
+      <div class="flex justify-between font-bold border-t border-stone-200 mt-3 pt-3">
+        <span>Subtotal</span>
+        <span class="text-shell-600">{{.Order.FormattedTotal}}</span>
+      </div>
+      {{if .Order.Shipping.Cents}}
+      <div class="flex justify-between text-sm text-gray-600 mt-2">
+        <span>Frete pago pelo comprador <span class="text-gray-400">(para a etiqueta)</span></span><span>+ {{.Order.FormattedShipping}}</span>
+      </div>
+      {{end}}
+      {{if .Order.MarketplaceFeeCents}}
+      <div class="flex justify-between text-sm text-gray-500 mt-2">
+        <span>Comissão do site <span class="text-gray-400">(só sobre os livros)</span></span><span>− {{brl .Order.MarketplaceFee}}</span>
+      </div>
+      {{end}}
+      <div class="flex justify-between font-semibold text-forest-800 mt-1">
+        <span>Você recebe</span><span>{{brl (sub (add .Order.Total .Order.Shipping.Reais) .Order.MarketplaceFee)}}</span>
+      </div>
+      <p class="text-xs text-gray-400 mt-1">Antes das taxas do próprio Mercado Pago.</p>
+    </div>
+
+    {{template "envio_pedido" dict "Order" .Order "Origem" .Origem "Acao" (printf "/vendedor/pedidos/detalhe?id=%d" .Order.ID) "CSRF" .CSRFToken "Config" "/vendedor/envio"}}
+
+    <div class="border-t border-stone-200 pt-4">
+      <h3 class="font-semibold text-forest-700 mb-1">Situação</h3>
+      <p class="text-xs text-gray-400 mb-3">
+        O pagamento é confirmado automaticamente. Você só atualiza a entrega.
+      </p>
+      {{if eq .Order.Status "pendente"}}
+        <p class="text-sm text-gray-600">Aguardando o pagamento do cliente. Ainda não envie.</p>
+      {{else if eq .Order.Status "aguardando_pagamento"}}
+        <p class="text-sm text-gray-600">Aguardando o pagamento do cliente. Ainda não envie.</p>
+      {{else if eq .Order.Status "cancelado"}}
+        <p class="text-sm text-gray-600">Pedido cancelado.</p>
+      {{else}}
+      {{template "passos_despacho" dict "Order" .Order "D" .Despacho "SLA" .SLA "Acao" (printf "/vendedor/pedidos/detalhe?id=%d" .Order.ID) "CSRF" .CSRFToken}}
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}
